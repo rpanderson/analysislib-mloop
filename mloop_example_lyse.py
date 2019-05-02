@@ -39,7 +39,7 @@ class LoopInterface(Interface):
             if not USE_QUEUE
             else lyse.routine_storage.my_queue.get()
         ):
-            print('Waiting for next execution of lyse analysis routine...')
+            # print('Waiting for next execution of lyse analysis routine...')
             time.sleep(2)
 
         # Return cost dictionary to M-LOOP
