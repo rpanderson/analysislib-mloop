@@ -25,27 +25,29 @@ def cfgget(cfgfile=None):
 
         # Shot compilation parameters
         config["COMPILATION"] = {}
-        config["COMPILATION"]["labscript_file"] = '"crossed_beam_bec.py"'
+        config["COMPILATION"]["labscript_file"] = '"mloop_test.py"'
 
         # Analayis parameters
         config["ANALYSIS"] = {}
         # lyse DataFrame key to optimise
-        config["ANALYSIS"]["opt_param"] = '["load_rate", "MOT_number"]'
+        config["ANALYSIS"]["opt_param"] = '["fake_result", "y"]'
         # ignore nans in cost_analysis function
         config["ANALYSIS"]["ignore_nans"] = 'false'
 
         # M-LOOP parameters
         config["MLOOP"] = {}
         # parameters mloop varies during optimisation
-        config["MLOOP"]["mloop_params"] = '{"detuning": {"min": -5.0, "max": 5.0, "start": -2.0} }'
+        config["MLOOP"]["mloop_params"] = '{"x": {"min": -5.0, "max": 5.0, "start": -2.0} }'
+        # number of training runs
+        config["MLOOP"]["num_training_runs"] = '5'
         # maximum number of iterations
-        config["MLOOP"]["max_num_runs_without_better_params"] = '4'
+        config["MLOOP"]["max_num_runs_without_better_params"] = '10'
         # maximum number of iterations
-        config["MLOOP"]["max_num_runs"] = '100'
+        config["MLOOP"]["max_num_runs"] = '20'
         # maximum number of iterations
         config["MLOOP"]["uncer"] = '0.0'
         # maximum % move distance from best params
-        config["MLOOP"]["trust_region"] = '0.3'
+        config["MLOOP"]["trust_region"] = '0.5'
         # trust data or not flag
         config["MLOOP"]["bad"] = 'false'
         # maximum number of iterations

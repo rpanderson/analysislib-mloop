@@ -37,14 +37,14 @@ class LoopInterface(Interface):
         print('M-LOOP iteration  {:3d}'.format(self.cfg_dict['iter_count']))
         cost_dict = {
             'cost': float(cost),
-            'uncer': float(0.05),
+            # 'uncer': float(0.05),
             'bad': self.cfg_dict["bad"],
         }
 
         return cost_dict
 
 
-def optmimus():
+def optimus():
     # create M-LOOP optmiser interface with desired parameters
     opt_interface = LoopInterface()
 
@@ -77,24 +77,16 @@ def lorentzian(x, s=0.05):
 if __name__ == '__main__':
     # Runs each time this analysis routine does
     import lyse
-    if (
-        hasattr(lyse.routine_storage, "counter")
-        and lyse.routine_storage.optimisation.is_alive()
-    ):
-        lyse.routine_storage.counter += 1
-        print("Routine iteration {:3d}".format(lyse.routine_storage.counter))
+    if not hasattr(lyse.routine_storage, "queue"):
+        print("First execution of lyse routine...")
+        import Queue
+        lyse.routine_storage.queue = Queue.Queue()
+    if hasattr(lyse.routine_storage, "optimisation"):
+    # and lyse.routine_storage.optimisation.is_alive()
         lyse.routine_storage.queue.put(-lorentzian(lyse.routine_storage.x))
     else:
-        if not hasattr(lyse.routine_storage, "counter"):
-            print("First execution of lyse routine...")
-            import Queue
-            lyse.routine_storage.queue = Queue.Queue()
-        else:
-            print("Restarting optimisation process...")
-            show_all_default_visualizations(lyse.routine_storage.controller)
+        print("(Re)starting optimisation process...")
         import threading
-        lyse.routine_storage.counter = 0
-        lyse.routine_storage.optimisation = threading.Thread(target=optmimus)
+        lyse.routine_storage.optimisation = threading.Thread(target=optimus)
         lyse.routine_storage.optimisation.daemon = True
         lyse.routine_storage.optimisation.start()
-        print('Started optimisation process...')
