@@ -45,9 +45,9 @@ if __name__ == '__main__':
     ):
         lyse.routine_storage.queue.put(
             cost_analysis(
-                key_path=mloop_config['opt_param'],
+                key_path=mloop_config['opt_param'] if not mloop_config['mock'] else [],
                 ignore_nans=mloop_config['ignore_nans'],
-                x=lyse.routine_storage.x if mloop_config['mock'] else None
+                x=lyse.routine_storage.x if mloop_config['mock'] else None,
             )
         )
     else:
