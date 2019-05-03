@@ -2,6 +2,20 @@ import lyse
 import config_get
 from mloop.interfaces import Interface
 from mloop.controllers import create_controller
+import zprocess
+
+
+def zmq_get_retry(*args, retries=0):
+    attempts = 0
+    while attempts <= retries:
+        try:
+            response = zprocess.zmq_get(*args)
+            break
+        except zprocess.TimeoutError:
+            attempts += 1
+            if attempts > retries:
+                exit(1)
+    return response
 
 
 class LoopInterface(Interface):
@@ -17,6 +31,17 @@ class LoopInterface(Interface):
         # initialise iteration counter
         self.cfg_dict['iter_count'] = 0
 
+        if not self.cfg_dict['mock']:
+            from labscript_utils import labconfig
+
+            # get server information for experiment interface
+            lc = labconfig.LabConfig()
+
+            # define experiment server port and hostname
+            self.server_timeout = lc.getint('DEFAULT', 'server_timeout', fallback=5)
+            self.experiment_port = lc.getint('ports', 'mloop-experiment')
+            self.experiment_host = lc.get('servers', 'mloop-experiment')
+
     # this is the method called by MLOOP upon each new iteration when it wants to know the cost
     # associated with a given point in the search space
     def get_next_cost_dict(self, params_dict):
@@ -25,8 +50,19 @@ class LoopInterface(Interface):
         self.cfg_dict['iter_count'] += 1
         self.cfg_dict['mloop_params'] = params_dict['params']
 
-        # Store current optimisation parameter so that __main__ can simulate a result
-        lyse.routine_storage.x = self.cfg_dict['mloop_params'][0]
+        if not self.cfg_dict['mock']:
+            # Request next experiment from experiment interface
+            print('Requesting next shot from experiment interface...')
+            _ = zmq_get_retry(
+                self.experiment_port,
+                self.experiment_host,
+                self.cfg_dict,
+                self.server_timeout,
+                retries=20,
+            )
+        else:
+            # Store current optimisation parameter so that __main__ can simulate a result
+            lyse.routine_storage.x = self.cfg_dict['mloop_params'][0]
 
         # Only proceed once per execution of the lyse routine
         print('Getting current cost from lyse queue...')

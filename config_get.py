@@ -26,6 +26,8 @@ def cfgget(cfgfile=None):
         # Shot compilation parameters
         config["COMPILATION"] = {}
         config["COMPILATION"]["labscript_file"] = '"mloop_test.py"'
+        config["COMPILATION"]["template_folder"] = '"C:\\\\Experiments\\\\example_experiment\\\\mloop_test"'
+        config["COMPILATION"]["template_file"] = '"template.h5"'
 
         # Analayis parameters
         config["ANALYSIS"] = {}
@@ -85,6 +87,9 @@ def cfgget(cfgfile=None):
 
     # starting point for search space, default to half point if not defined
     params["first_params"] = [params["mloop_params"][key]["start"] for key in params["params_to_change"]]
+
+    # get group name of each global
+    params["globals_groups"] = [params["mloop_params"][key]["group"] for key in params["params_to_change"]]
 
     return params
 
