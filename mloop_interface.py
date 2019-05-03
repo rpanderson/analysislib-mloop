@@ -39,8 +39,8 @@ class LoopInterface(Interface):
 
             # define experiment server port and hostname
             self.server_timeout = lc.getint('DEFAULT', 'server_timeout', fallback=5)
-            self.experiment_port = lc.getint('ports', 'mloop-experiment')
-            self.experiment_host = lc.get('servers', 'mloop-experiment')
+            self.experiment_port = lc.getint('ports', 'compiler')
+            self.experiment_host = lc.get('servers', 'compiler')
 
     # this is the method called by MLOOP upon each new iteration when it wants to know the cost
     # associated with a given point in the search space

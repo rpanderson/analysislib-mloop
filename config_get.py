@@ -29,6 +29,7 @@ def cfgget(cfgfile=None):
         config["COMPILATION"]["labscript_file"] = '"mloop_test.py"'
         config["COMPILATION"]["template_folder"] = '"C:\\\\Experiments\\\\example_experiment\\\\mloop_test"'
         config["COMPILATION"]["template_file"] = '"template.h5"'
+        config["COMPILATION"]["filename_prefix_format"] = '%%Y-%%m-%%d_{iter_count:05d}_{template_basename}'
 
         # Analayis parameters
         config["ANALYSIS"] = {}
@@ -71,8 +72,13 @@ def cfgget(cfgfile=None):
             config.write(cfile)
 
     # iterate over configuration object and store pairs in parameter dictionary
-    params = dict((key, json.loads(val))
-                  for sect in config.sections() for (key, val) in config.items(sect))
+    params = {}
+    for sect in config.sections():
+        for (key, val) in config.items(sect):
+            try:
+                params[key] = json.loads(val)
+            except json.JSONDecodeError:
+                params[key] = val
 
     # modify params to match mloop expectations - not crazy about this but it has to happen somewhere
     params["params_to_change"] = list(params["mloop_params"].keys())
