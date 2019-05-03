@@ -19,17 +19,6 @@ class LoopInterface(Interface):
         # initialise iteration counter
         self.cfg_dict['iter_count'] = 0
 
-        if not self.cfg_dict['mock']:
-            from labscript_utils import labconfig
-
-            # get server information for experiment interface
-            lc = labconfig.LabConfig()
-
-            # define experiment server port and hostname
-            self.server_timeout = lc.getint('DEFAULT', 'server_timeout', fallback=5)
-            self.experiment_port = lc.getint('ports', 'compiler')
-            self.experiment_host = lc.get('servers', 'compiler')
-
     # this is the method called by MLOOP upon each new iteration when it wants to know the cost
     # associated with a given point in the search space
     def get_next_cost_dict(self, params_dict):
@@ -54,7 +43,7 @@ class LoopInterface(Interface):
         cost_dict = {
             'cost': float(cost),
             # 'uncer': float(0.05),
-            'bad': self.cfg_dict["bad"],
+            'bad': self.cfg_dict['bad'],
         }
 
         return cost_dict
