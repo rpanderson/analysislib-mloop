@@ -20,6 +20,7 @@ mloop_timeout = lc.getint('DEFAULT', 'server_timeout', fallback=5)
 
 # =========================================================================
 
+
 def compile_and_run_shot(config):
 
     # Copy hdf5 file ready for optimisation
@@ -44,17 +45,15 @@ def compile_and_run_shot(config):
         shot_output_dir = template_folder
         filename_prefix = now.strftime(config['filename_prefix_format']).format(
             template_basename=os.path.splitext(template_file)[0],
-            iter_count=config['iter_count']
-            )
+            iter_count=config['iter_count'],
+        )
     except KeyError:
         sequence_attrs, shot_output_dir, filename_prefix = rm.new_sequence_details(
-            script_path=labscript_path, 
-            config=lc, 
-            increment_sequence_index=False
-            )
+            script_path=labscript_path, config=lc, increment_sequence_index=False
+        )
 
     output_file = filename_prefix + '.h5'
-    output_path = os.path.join(shot_output_dir, output_file) 
+    output_path = os.path.join(shot_output_dir, output_file)
     print(output_path)
 
     # Change optimisation globals in place
