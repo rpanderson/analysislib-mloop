@@ -1,7 +1,5 @@
 import lyse
 import os
-import zmq
-import signal
 import datetime
 import zprocess
 import runmanager as rm
@@ -12,11 +10,8 @@ from labscript_utils import shared_drive
 
 # Lab configuration
 lc = labconfig.LabConfig()
-shot_storage = lc.get('DEFAULT', 'experiment_shot_storage')
 blacs_port = lc.getint('ports', 'blacs')
 blacs_host = lc.get('servers', 'blacs')
-mloop_port = lc.getint('ports', 'compiler')
-mloop_timeout = lc.getint('DEFAULT', 'server_timeout', fallback=5)
 
 # =========================================================================
 
@@ -82,8 +77,12 @@ def compile_and_run_shot(config):
 if __name__ == '__main__':
 
     print('Launching zprocess server for experiment compilation and submission.\n\n')
+    import zmq
+    import signal
 
     # setup port listening with default time out (estimated single shot max time)
+    mloop_port = lc.getint('ports', 'compiler')
+    mloop_timeout = lc.getint('DEFAULT', 'server_timeout', fallback=5)
     context = zmq.Context()
     socket = context.socket(zmq.REP)
     socket.setsockopt(zmq.LINGER, 0)

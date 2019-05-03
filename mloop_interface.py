@@ -3,19 +3,7 @@ import config_get
 from mloop.interfaces import Interface
 from mloop.controllers import create_controller
 import zprocess
-
-
-def zmq_get_retry(*args, retries=0):
-    attempts = 0
-    while attempts <= retries:
-        try:
-            response = zprocess.zmq_get(*args)
-            break
-        except zprocess.TimeoutError:
-            attempts += 1
-            if attempts > retries:
-                exit(1)
-    return response
+from mloop_experiment_interface import compile_and_run_shot
 
 
 class LoopInterface(Interface):
@@ -53,13 +41,7 @@ class LoopInterface(Interface):
         if not self.cfg_dict['mock']:
             # Request next experiment from experiment interface
             print('Requesting next shot from experiment interface...')
-            _ = zmq_get_retry(
-                self.experiment_port,
-                self.experiment_host,
-                self.cfg_dict,
-                self.server_timeout,
-                retries=20,
-            )
+            compile_and_run_shot(self.cfg_dict)
         else:
             # Store current optimisation parameter so that __main__ can simulate a result
             lyse.routine_storage.x = self.cfg_dict['mloop_params'][0]
