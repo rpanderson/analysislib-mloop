@@ -1,9 +1,11 @@
+import lyse
 import numpy as np
 from mloop.interfaces import Interface
 from mloop.controllers import create_controller
 
+
 class LoopInterface(Interface):
-    global lyse; import lyse
+    # global lyse; import lyse
     global config_get; import config_get
 
     # Initialization of the interface, including this method is optional
@@ -26,7 +28,7 @@ class LoopInterface(Interface):
         self.cfg_dict['iter_count'] += 1
         self.cfg_dict['mloop_params'] = params_dict['params']
 
-        # Store current optimisation parameter in routine_storage to simulate data
+        # Store current optimisation parameter so that __main__ can simulate a result
         lyse.routine_storage.x = self.cfg_dict['mloop_params'][0]
 
         # Only proceed once per execution of the lyse routine
@@ -34,7 +36,6 @@ class LoopInterface(Interface):
         cost = lyse.routine_storage.queue.get()
 
         # Return cost dictionary to M-LOOP
-        print('M-LOOP iteration  {:3d}'.format(self.cfg_dict['iter_count']))
         cost_dict = {
             'cost': float(cost),
             # 'uncer': float(0.05),
@@ -76,13 +77,14 @@ def lorentzian(x, s=0.05):
 
 if __name__ == '__main__':
     # Runs each time this analysis routine does
-    import lyse
     if not hasattr(lyse.routine_storage, "queue"):
         print("First execution of lyse routine...")
         import Queue
         lyse.routine_storage.queue = Queue.Queue()
-    if hasattr(lyse.routine_storage, "optimisation"):
-    # and lyse.routine_storage.optimisation.is_alive()
+    if (
+        hasattr(lyse.routine_storage, "optimisation")
+        and lyse.routine_storage.optimisation.is_alive()
+    ):
         lyse.routine_storage.queue.put(-lorentzian(lyse.routine_storage.x))
     else:
         print("(Re)starting optimisation process...")
