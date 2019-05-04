@@ -3,7 +3,6 @@ import config_get
 from mloop.interfaces import Interface
 from mloop.controllers import create_controller
 import zprocess
-from mloop_experiment_interface import compile_and_run_shot
 
 
 class LoopInterface(Interface):
@@ -29,6 +28,7 @@ class LoopInterface(Interface):
 
         if not self.cfg_dict['mock']:
             # Request next experiment from experiment interface
+            from mloop_experiment_interface import compile_and_run_shot
             print('Requesting next shot from experiment interface...')
             compile_and_run_shot(self.cfg_dict)
         else:
