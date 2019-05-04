@@ -29,6 +29,7 @@ def cfgget(cfgfile=None):
         config["COMPILATION"]["labscript_file"] = '"mloop_test.py"'
         config["COMPILATION"]["template_folder"] = '"C:\\\\Experiments\\\\example_experiment\\\\mloop_test"'
         config["COMPILATION"]["template_file"] = '"template.h5"'
+        config["COMPILATION"]["autogenerate_template"] = 'true'
         config["COMPILATION"]["filename_prefix_format"] = '%%Y-%%m-%%d_{iter_count:05d}_{template_basename}'
 
         # Analayis parameters
