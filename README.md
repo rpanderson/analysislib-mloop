@@ -46,7 +46,9 @@ The following assumes you already have an experiment controlled by the labscript
 3. **Load the analysis routine that computes the quantity you want to optimise into [lyse](https://bitbucket.org/labscript_suite/lyse).** This routine should update `opt_param` of the lyse dataframe by calling the `save_result` (or its variants) of a `lyse.Run`. For the above parameters, this would be `fake_result.py` containing:
 
         run = lyse.Run(lyse.path)
+        
         # Your single-shot analysis code goes here
+        
         run.save_result('y', your_result)
 
 4. **Load `mloop_multishot.py` as an analysis routine in lyse.** Ensure that it runs after the analysis routine that updates `opt_param`, e.g. `fake_result.py` in the above configuration, using the (move routine) up/down buttons.
@@ -89,7 +91,7 @@ run.save_result(name='y', value=your_result if your_condition else np.nan)
 
 ## Implementation
 
-We use `lyse.routine_storage` to create:
+We use `lyse.routine_storage` to store:
 
 * a long-lived thread (`threading.Thread`) to run the main method of `mloop_interface.py` within `mloop_multishot.py`,
 * a queue (`Queue.Queue`) for `mloop_multishot.py`/`mloop_interface.py` to put/get the latest M-LOOP cost dictionary, and
@@ -102,10 +104,10 @@ The `LoopInterface` subclass (of `mloop.interface.Interface`) has a method `get_
 * requests the next experiment shot be compiled, run, and returned to lyse by calling `compile_and_run_shot` function of `mloop_experiment_interface.py`, and
 * waits for the next cost using a blocking call to `lyse.routine_storage.queue.get()`.
 
-The main method of `mloop_interface.py` follows the trend of the M-LOOP tutorial/examples:
+The main method of `mloop_interface.py` follows the trend of the [M-LOOP >> Python controlled experiment tutorial](https://m-loop.readthedocs.io/en/latest/tutorials.html#python-controlled-experiment):
 
 * Instantiate `LoopInterface`, an M-LOOP optmiser interface.
-* Get the current configuration dictionary (this can be changed mid-optimisation, but do so at your own risk).
+* Get the current configuration.
 * Create an `mloop.controllers.Controller` instance for the optimiser interface, using the above configuration.
 * Run the `optimize` method of this controller.
 * Return a dictionary of `best_params`, `best_cost`, `best_uncer`, `best_index`.
@@ -119,9 +121,9 @@ The `compile_and_run_shot` function of `mloop_experiment_interface.py` does what
 
 ### Provenance
 
-The original design and implementation occurred during the summer of 2017/2018 by Josh Morris, Ethan Payne, Lincoln Turner, with assistance from Chris Billington and Phil Starkey. In this incarnation, the M-LOOP interface and experiment interface were run as standalone processes in a shell, with communication between these two actors and the analysis interface being done over a ZMQ socket. This required careful execution of the scripts in the right order, and for the M-LOOP interface to be restarted after each optimistion, and was a bit clunky/flaky.
+The original design and implementation occurred during the summer of 2017/2018 by Josh Morris, Ethan Payne, Lincoln Turner, and I, with assistance from Chris Billington and Phil Starkey. In this incarnation, the M-LOOP interface and experiment interface were run as standalone processes in a shell, with communication between these two actors and the analysis interface being done over a ZMQ socket. This required careful execution of the scripts in the right order, and for the M-LOOP interface to be restarted after each optimistion, and was a bit clunky/flaky.
 
-In 2019 Lincoln Turner and I supervised student projects on improving this original implementation using a single lyse analysis routine, the skeleton of which was written by Phil Starkey. This refactoring required the following enhancements and bugfixes to the lascript suite, which Chris Billington (mostly) and I undertook:
+In 2019 Lincoln Turner and I supervised student projects on improving this original implementation using a single lyse analysis routine, the skeleton of which was written by Phil Starkey. This refactoring required the following enhancements and bugfixes to the labscript suite, which Chris Billington (mostly) and I undertook:
 
 * [lyse PR #61](https://bitbucket.org/labscript_suite/lyse/pull-requests/61): Fix for [#48](https://bitbucket.org/labscript_suite/lyse/issues/48): Make analysis_subprocess.py multiprocessing-friendly
 * [lyse PR #62](https://bitbucket.org/labscript_suite/lyse/pull-requests/62): Terminate subprocesses at shutdown.
@@ -129,7 +131,7 @@ In 2019 Lincoln Turner and I supervised student projects on improving this origi
    
 ### Future improvements 
 
-Experiment shot compilation is the next thing to improve. This will be done when runmanager gets [UI scripting](https://bitbucket.org/labscript_suite/runmanager/issues/68/ui-scripting), so that shots can be compiled and run by programmatically interacting with the GUI rather than using the existing set of limited runmanager library calls. This will have several advantages, including:
+Experiment shot compilation, following runmanager [UI scripting](https://bitbucket.org/labscript_suite/runmanager/issues/68/ui-scripting), so that shots can be compiled and run by programmatically interacting with the GUI rather than using the existing set of limited runmanager library calls. This will have several advantages, including:
 
 * No need for a template shot file.
 * No need to specify the globals group of each optimisation parameters.
