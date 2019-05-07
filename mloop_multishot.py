@@ -3,6 +3,15 @@ import numpy as np
 import os
 import config_get
 
+try:
+    from labscript_utils import check_version
+except ImportError:
+    raise ImportError('Require labscript_utils > 2.1.0')
+
+check_version('lyse', '2.5.0', '3.0')
+check_version('zprocess', '2.13.1', '3.0')
+check_version('labscript_utils', '2.12.4', '3.0')
+
 
 def lorentzian(x, s=0.05):
     return 1 / (1 + x ** 2) + s * np.random.randn()
