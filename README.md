@@ -53,11 +53,11 @@ The following assumes you already have an experiment controlled by the labscript
 
 4. **Load `mloop_multishot.py` as an analysis routine in lyse.** Ensure that it runs after the analysis routine that updates `opt_param`, e.g. `fake_result.py` in the above configuration, using the (move routine) up/down buttons.
 
-5. **Begin automated optimisation**:
-    * by pressing the 'Run multishot analysis' button in lyse, if the template shot file exists and contains the globals specified in `mloop_params`; or
-    * by setting `autogenerate_template = true` in `mloop_config.ini` and running a shot using [runmanager](https://bitbucket.ord/runmanager). This will generate a new template file at the start of each optimisation, making a back up of the previous template; or
-    * by setting `mock = true` in `mloop_config.ini`, which bypasses shot compilation and submission, and generates a fake result based on the current value of the first optimisation parameter. This is useful for testing as it only requires that lyse be running (and permits you to skip creating the template file and performing steps (1) and (3) above).
-    
+5. **Begin automated optimisation** by doing one of the following:
+    * Press the 'Run multishot analysis' button in lyse.
+        + This requires the template shot file exists and contains the globals specified in `mloop_params`; unless you
+        + Set `mock = true` in `mloop_config.ini`, which bypasses shot compilation and submission, and generates a fake result based on the current value of the first optimisation parameter. Each press of 'Run multishot analysis' will elicit another M-LOOP iteration. This is useful for testing your M-LOOP installation and the threading/multiprocessing used in this codebase, as it only requires that lyse be running (and permits you to skip creating the template file and performing steps (1) and (3) above).
+    * Set `autogenerate_template = true` in `mloop_config.ini` and running a shot using [runmanager](https://bitbucket.ord/runmanager). This will generate a new template file at the start of each optimisation, making a back up of the previous template; or    
     Either of these will begin an M-LOOP optimisation, with a new shot being compiled and submitted to [blacs](https://bitbucket.ord/blacs) each time a cost value is computed.
 
 6. **Pause optimisation** by pausing the lyse analysis queue or by unchecking (deactivating) the `mloop_multishot.py` in lyse.
