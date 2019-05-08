@@ -56,8 +56,8 @@ The following assumes you already have an experiment controlled by the labscript
 5. **Begin automated optimisation** by doing one of the following:
     * Press the 'Run multishot analysis' button in lyse.
         + This requires the template shot file exists and contains the globals specified in `mloop_params`; unless you
-        + Set `mock = true` in `mloop_config.ini`, which bypasses shot compilation and submission, and generates a fake result based on the current value of the first optimisation parameter. Each press of 'Run multishot analysis' will elicit another M-LOOP iteration. This is useful for testing your M-LOOP installation and the threading/multiprocessing used in this codebase, as it only requires that lyse be running (and permits you to skip creating the template file and performing steps (1) and (3) above).
-    * Set `autogenerate_template = true` in `mloop_config.ini` and running a shot using [runmanager](https://bitbucket.ord/runmanager). This will generate a new template file at the start of each optimisation, making a back up of the previous template; or    
+        + Set `mock = true` in `mloop_config.ini`, which bypasses shot compilation and submission, and generates a fake cost based on the current value of the first optimisation parameter. Each press of 'Run multishot analysis' will elicit another M-LOOP iteration. This is useful for testing your M-LOOP installation and the threading/multiprocessing used in this codebase, as it only requires that lyse be running (and permits you to skip creating the template file and performing steps (1) and (3) above).
+    * Set `autogenerate_template = true` in `mloop_config.ini` and run a shot using [runmanager](https://bitbucket.ord/runmanager). This will generate a new template file at the start of each optimisation, making a back up of the previous template.    
     Either of these will begin an M-LOOP optimisation, with a new shot being compiled and submitted to [blacs](https://bitbucket.ord/blacs) each time a cost value is computed.
 
 6. **Pause optimisation** by pausing the lyse analysis queue or by unchecking (deactivating) the `mloop_multishot.py` in lyse.
@@ -71,8 +71,7 @@ The `mloop_multishot.py` script can be loaded as a single-shot analysis routine 
 
 The cost can be the result of multi-shot analysis (requiring more than one shot to evaluate). Suppose you only want to return a cost value after:
 
-* a certain number of shots have completed, or 
-* all shots in a labscript sequence have completed, or
+* a certain number of shots (repeats or those in a labscript sequence) have completed, and/or 
 * the uncertainty in some multi-shot analysis result is below some threshold.
 
 In such cases, you would include the following in your multi-shot analysis routine:
