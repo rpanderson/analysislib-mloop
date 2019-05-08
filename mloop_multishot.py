@@ -62,13 +62,13 @@ if __name__ == '__main__':
     else:
         try:
             if mloop_config['autogenerate_template']:
-                print("Using latest shot to generate template...")
                 from clean_h5_file import clean_h5_file
                 df = lyse.data()
                 h5_path = df.filepath.iloc[-1]
                 new_h5_path = os.path.join(
                     mloop_config['template_folder'], mloop_config['template_file']
                 )
+                print("Using latest shot to generate template...")
                 clean_h5_file(h5_path, new_h5_path)
         except:
             pass
