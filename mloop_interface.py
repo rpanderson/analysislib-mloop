@@ -28,9 +28,17 @@ class LoopInterface(Interface):
 
         if not self.cfg_dict['mock']:
             # Request next experiment from experiment interface
-            from mloop_experiment_interface import compile_and_run_shot
-            print('Requesting next shot from experiment interface...')
-            compile_and_run_shot(self.cfg_dict)
+            try:
+                from runmanager import remote
+                globals_dict = dict(
+                    zip(self.cfg_dict['params_to_change'], self.cfg_dict['mloop_params'])
+                )
+                remote.set_globals(globals_dict)
+                remote.engage()
+            except ImportError:
+                from mloop_experiment_interface import compile_and_run_shot
+                print('Requesting next shot from experiment interface...')
+                compile_and_run_shot(self.cfg_dict)
         else:
             # Store current optimisation parameter so that __main__ can simulate a result
             lyse.routine_storage.x = self.cfg_dict['mloop_params'][0]
