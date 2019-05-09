@@ -26,10 +26,10 @@ def cfgget(cfgfile=None):
         # Shot compilation parameters
         config["COMPILATION"] = {}
         config["COMPILATION"]["mock"] = 'false'
-        config["COMPILATION"]["labscript_file"] = '"mloop_test.py"'
-        config["COMPILATION"]["template_folder"] = '"C:\\\\Experiments\\\\example_experiment\\\\mloop_test"'
-        config["COMPILATION"]["template_file"] = '"template.h5"'
-        config["COMPILATION"]["autogenerate_template"] = 'true'
+        # config["COMPILATION"]["labscript_file"] = '"mloop_test.py"'
+        # config["COMPILATION"]["template_folder"] = '"C:\\\\Experiments\\\\example_experiment\\\\mloop_test"'
+        # config["COMPILATION"]["template_file"] = '"template.h5"'
+        # config["COMPILATION"]["autogenerate_template"] = 'true'
         config["COMPILATION"]["filename_prefix_format"] = '%%Y-%%m-%%d_{iter_count:05d}_{template_basename}'
 
         # Analayis parameters
@@ -42,7 +42,7 @@ def cfgget(cfgfile=None):
         # M-LOOP parameters
         config["MLOOP"] = {}
         # parameters mloop varies during optimisation
-        config["MLOOP"]["mloop_params"] = '{"x": {"min": -5.0, "max": 5.0, "start": -2.0, "group": "some_group"} }'
+        config["MLOOP"]["mloop_params"] = '{"x": {"min": -5.0, "max": 5.0, "start": -2.0} }' #, "group": "some_group"} }'
         # number of training runs
         config["MLOOP"]["num_training_runs"] = '5'
         # maximum number of iterations
@@ -97,7 +97,7 @@ def cfgget(cfgfile=None):
     params["first_params"] = [params["mloop_params"][key]["start"] for key in params["params_to_change"]]
 
     # get group name of each global
-    params["globals_groups"] = [params["mloop_params"][key]["group"] for key in params["params_to_change"]]
+    # params["globals_groups"] = [params["mloop_params"][key]["group"] for key in params["params_to_change"]]
 
     return params
 

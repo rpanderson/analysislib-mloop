@@ -3,6 +3,22 @@ import config_get
 from mloop.interfaces import Interface
 from mloop.controllers import create_controller
 import zprocess
+from runmanager.remote import set_globals, engage
+
+
+def set_globals_mloop(mloop_session=None, mloop_iteration=None):
+    """Set globals named 'mloop_session' and 'mloop_iteration'
+    based on the current . Defaults are None, which will ideally
+    remain that way unless there is an active optimisation underway.
+    """
+    if mloop_iteration and mloop_session is None:
+        globals = {'mloop_iteration': mloop_iteration}
+    else:
+        globals = {'mloop_session': mloop_session, 'mloop_iteration': mloop_iteration}
+    try:
+        set_globals(globals)
+    except ValueError:
+        pass
 
 
 class LoopInterface(Interface):
@@ -28,17 +44,13 @@ class LoopInterface(Interface):
 
         if not self.cfg_dict['mock']:
             # Request next experiment from experiment interface
-            try:
-                from runmanager import remote
-                globals_dict = dict(
-                    zip(self.cfg_dict['params_to_change'], self.cfg_dict['mloop_params'])
-                )
-                remote.set_globals(globals_dict)
-                remote.engage()
-            except ImportError:
-                from mloop_experiment_interface import compile_and_run_shot
-                print('Requesting next shot from experiment interface...')
-                compile_and_run_shot(self.cfg_dict)
+            print('Requesting next shot from experiment interface...')
+            globals_dict = dict(
+                zip(self.cfg_dict['params_to_change'], self.cfg_dict['mloop_params'])
+            )
+            set_globals(globals_dict)
+            set_globals_mloop(mloop_iteration=self.cfg_dict['iter_count'])
+            engage()
         else:
             # Store current optimisation parameter so that __main__ can simulate a result
             lyse.routine_storage.x = self.cfg_dict['mloop_params'][0]
@@ -60,6 +72,7 @@ class LoopInterface(Interface):
 def optimus():
     # create M-LOOP optmiser interface with desired parameters
     opt_interface = LoopInterface()
+    opt_interface.daemon = True
 
     # retrieve a snapshot of the configuration dictionary
     opt_dict = opt_interface.cfg_dict
@@ -67,12 +80,18 @@ def optimus():
     # instantiate experiment controller
     controller = create_controller(opt_interface, **opt_dict)
 
+    # Define the M-LOOP session ID and initialise the mloop_iteration
+    set_globals_mloop(controller.start_datetime.strftime('%Y%m%dT%H%M%S'), 0)
+
     # run the optimiser using the constructed interface
     controller.optimize()
 
     # The results of the optimization will be saved to files and can also be
     # accessed as attributes of the controller.
     print('Optimisation ended.')
+
+    # Set the M-LOOP session and index to None if they exist
+    set_globals_mloop()
 
     # Format the results
     opt_results = {}

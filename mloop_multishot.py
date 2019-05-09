@@ -10,7 +10,8 @@ except ImportError:
 
 check_version('lyse', '2.5.0', '3.0')
 check_version('zprocess', '2.13.1', '3.0')
-check_version('labscript_utils', '2.12.4', '3.0')
+check_version('labscript_utils', '2.12.5', '3.0')
+# check_version('runmanager', '2.5.0', '3.0')
 
 
 def lorentzian(x, s=0.05):
@@ -60,19 +61,6 @@ if __name__ == '__main__':
             )
         )
     else:
-        try:
-            if mloop_config['autogenerate_template']:
-                from clean_h5_file import clean_h5_file
-                df = lyse.data()
-                h5_path = df.filepath.iloc[-1]
-                new_h5_path = os.path.join(
-                    mloop_config['template_folder'], mloop_config['template_file']
-                )
-                print("Using latest shot to generate template...")
-                clean_h5_file(h5_path, new_h5_path)
-        except:
-            pass
-
         print("(Re)starting optimisation process...")
         import threading
         from mloop_interface import optimus
