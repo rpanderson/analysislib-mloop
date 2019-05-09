@@ -59,9 +59,7 @@ The following assumes you already have an experiment controlled by the labscript
 7. **Cancel or restart optimisation** by removing `mloop_multishot.py` or by right-clicking on it and selecting 'restart worker process for selected routines'.
 
 
-### Notes
-
-#### Uncertainties
+### Uncertainties
 
 Uncertaintes in the cost can be specified by saving the uncertainty with a name `'u_' + result_name`. For the example in step (3) above, this can be done as follows:
 
@@ -81,7 +79,7 @@ run.save_result('u_y', u_your_result)
 run.save_results_dict({'y', (your_result, u_your_result)}, uncertainties=True)
 ```
 
-#### Multi-shot cost evaluation 
+### Multi-shot cost evaluation 
 
 The cost can be the result of multi-shot analysis (requiring more than one shot to evaluate). Suppose you only want to return a cost value after:
 
@@ -102,7 +100,25 @@ run.save_result(name='y', value=your_result if your_condition else np.nan)
 
 ... and set `ignore_bad = true` in the analysis section of `mloop_config.ini`. Shots with `your_condition = False` will be not elicit a new cost, thus postponing the next iteration of optimisation. An example of such a multi-shot routine can be found in fake_result_multishot.py.
 
-#### Can mloop_multishot.py be a single-shot routine?
+### Analysing optimistion results
+
+Since cost evaluation can be based on one or more shots from one or more sequences, additional information is required to analyse a single M-LOOP optimisation session in lyse. For example, for per-shot cost evaluation (e.g. of a single-shot analysis result), each M-LOOP iteration will correspond to a one-shot sequence. For multi-shot cost evaluation, a single M-LOOP iteration might correspond to a single multi-shot sequence, repeated execution of the same shot (same `sequence_index` and `run number`, different `run repeat`), or something else. To keep track of this, we intend to add details of the optimisation session to the sequence attributes (written to each shot file). For the time being, you can keep track of the `mloop_session` and `mloop_iteration` by creating these in any active globals group in runmanager. They will be updated during each optimisation, and reset to None following the completion of an M-LOOP session. This then permits you to analyse shots from a particular optimisation session as follows:
+
+```python
+
+import lyse
+
+df = lyse.data()
+gb = df.groupby('mloop_session')
+mloop_session = list(gb.groups.keys())[-1]
+subdf = gb.get_group(mloop_session)
+```
+
+There's an example of this in plot_mloop_results.py.
+
+M-LOOP itself has [visualisation functions](https://m-loop.readthedocs.io/en/latest/tutorials.html#visualizations) which can be run on the log/archive files it creates.
+
+### Can mloop_multishot.py be a single-shot routine?
 
 The `mloop_multishot.py` script can be loaded as a single-shot analysis routine if `cost_key` derives from another single-shot routine, so long as it runs _after_ that routine.
 
