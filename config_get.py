@@ -26,10 +26,7 @@ def cfgget(cfgfile=None):
         # Shot compilation parameters
         config["COMPILATION"] = {}
         config["COMPILATION"]["mock"] = 'false'
-        # config["COMPILATION"]["labscript_file"] = '"mloop_test.py"'
-        # config["COMPILATION"]["template_folder"] = '"C:\\\\Experiments\\\\example_experiment\\\\mloop_test"'
-        # config["COMPILATION"]["template_file"] = '"template.h5"'
-        # config["COMPILATION"]["autogenerate_template"] = 'true'
+        config["COMPILATION"]["maximize"] = 'true'
         config["COMPILATION"]["filename_prefix_format"] = '%%Y-%%m-%%d_{iter_count:05d}_{template_basename}'
 
         # Analayis parameters
@@ -42,7 +39,7 @@ def cfgget(cfgfile=None):
         # M-LOOP parameters
         config["MLOOP"] = {}
         # parameters mloop varies during optimisation
-        config["MLOOP"]["mloop_params"] = '{"x": {"min": -5.0, "max": 5.0, "start": -2.0} }' #, "group": "some_group"} }'
+        config["MLOOP"]["mloop_params"] = '{"x": {"min": -5.0, "max": 5.0, "start": -2.0} }'
         # number of training runs
         config["MLOOP"]["num_training_runs"] = '5'
         # maximum number of iterations
