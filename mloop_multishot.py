@@ -38,13 +38,15 @@ def cost_analysis(cost_key=None, maximize=True, x=None):
             cost_dict['bad'] = True
         else:
             cost_dict['cost'] = (1 - 2 * maximize) * cost
-        u_cost_key = cost_key[:-1] + ('u_' + cost_key[-1], )
+            cost_dict['bad'] = False
+        u_cost_key = cost_key[:-1] + ('u_' + cost_key[-1],)
         if tuple(u_cost_key) in df:
             cost_dict['uncer'] = df[cost_key].iloc[ix]
 
     # If it doesn't exist, generate a fake cost
     elif x is not None:
         from fake_result import fake_result
+
         cost_dict['cost'] = (1 - 2 * maximize) * fake_result(x)
         shot_file = '<fake_cost>'
 
@@ -53,7 +55,6 @@ def cost_analysis(cost_key=None, maximize=True, x=None):
         cost_dict['cost'] = 1.2
         shot_file = '<constant_cost>'
 
-    print('Returning cost from {:}'.format(shot_file))
     return cost_dict
 
 
@@ -67,13 +68,13 @@ if __name__ == '__main__':
         hasattr(lyse.routine_storage, 'optimisation')
         and lyse.routine_storage.optimisation.is_alive()
     ):
-        lyse.routine_storage.queue.put(
-            cost_analysis(
-                cost_key=config['cost_key'] if not config['mock'] else [],
-                maximize=config['maximize'],
-                x=lyse.routine_storage.x if config['mock'] else None,
-            )
+        cost_dict = cost_analysis(
+            cost_key=config['cost_key'] if not config['mock'] else [],
+            maximize=config['maximize'],
+            x=lyse.routine_storage.x if config['mock'] else None,
         )
+        if not cost_dict['bad'] or not config['ignore_bad']:
+            lyse.routine_storage.queue.put(cost_dict)
     else:
         print('(Re)starting optimisation process...')
         import threading
