@@ -1,9 +1,9 @@
 import lyse
-import config_get
+from runmanager.remote import set_globals, engage
+import mloop_config
 from mloop.interfaces import Interface
 from mloop.controllers import create_controller
-import zprocess
-from runmanager.remote import set_globals, engage
+import time
 
 
 def set_globals_mloop(mloop_session=None, mloop_iteration=None):
@@ -22,85 +22,58 @@ def set_globals_mloop(mloop_session=None, mloop_iteration=None):
 
 
 class LoopInterface(Interface):
-    # Initialization of the interface, including this method is optional
     def __init__(self):
-
-        # inherit parent class methods
         super(LoopInterface, self).__init__()
 
-        # Retrieve config file parameters from local file or generates and save defaults
-        self.cfg_dict = config_get.cfgget()
+        # Retrieve configuration from file or generate from defaults
+        self.config = mloop_config.get()
+        self.num_in_costs = 0
 
-        # initialise iteration counter
-        self.cfg_dict['iter_count'] = 0
-
-    # this is the method called by MLOOP upon each new iteration when it wants to know the cost
+    # Method called by M-LOOP upon each new iteration to determine the cost
     # associated with a given point in the search space
     def get_next_cost_dict(self, params_dict):
-
-        # iterate counter and retrieve new experiment parameters
-        self.cfg_dict['iter_count'] += 1
-        self.cfg_dict['mloop_params'] = params_dict['params']
-
-        if not self.cfg_dict['mock']:
-            # Request next experiment from experiment interface
+        self.num_in_costs += 1
+        if not self.config['mock']:
             print('Requesting next shot from experiment interface...')
-            globals_dict = dict(
-                zip(self.cfg_dict['params_to_change'], self.cfg_dict['mloop_params'])
-            )
+            globals_dict = dict(zip(self.config['mloop_params'], params_dict['params']))
             set_globals(globals_dict)
-            set_globals_mloop(mloop_iteration=self.cfg_dict['iter_count'])
+            print('Run: {:d}'.format(self.num_in_costs))
+            set_globals_mloop(mloop_iteration=self.num_in_costs)
+            time.sleep(0.05)
             engage()
         else:
-            # Store current optimisation parameter so that __main__ can simulate a result
-            lyse.routine_storage.x = self.cfg_dict['mloop_params'][0]
+            # Store a current parameter so that mloop_multishot.py can fake a cost
+            lyse.routine_storage.x = params_dict['params'][0]
 
-        # Only proceed once per execution of the lyse routine
+        # Only proceed once per execution of the mloop_multishot.py routine
         print('Getting current cost from lyse queue...')
-        cost = lyse.routine_storage.queue.get()
-
-        # Return cost dictionary to M-LOOP
-        cost_dict = {
-            'cost': float(cost),
-            # 'uncer': float(0.05),
-            'bad': self.cfg_dict['bad'],
-        }
-
-        return cost_dict
+        return lyse.routine_storage.queue.get()
 
 
-def optimus():
-    # create M-LOOP optmiser interface with desired parameters
-    opt_interface = LoopInterface()
-    opt_interface.daemon = True
+def main():
+    # Create M-LOOP optmiser interface with desired parameters
+    interface = LoopInterface()
+    # interface.daemon = True
 
-    # retrieve a snapshot of the configuration dictionary
-    opt_dict = opt_interface.cfg_dict
-
-    # instantiate experiment controller
-    controller = create_controller(opt_interface, **opt_dict)
+    # Instantiate experiment controller
+    controller = create_controller(interface, **interface.config)
 
     # Define the M-LOOP session ID and initialise the mloop_iteration
     set_globals_mloop(controller.start_datetime.strftime('%Y%m%dT%H%M%S'), 0)
 
-    # run the optimiser using the constructed interface
+    # Run the optimiser using the constructed interface
     controller.optimize()
 
-    # The results of the optimization will be saved to files and can also be
-    # accessed as attributes of the controller.
+    # Reset the M-LOOP session and index to None
     print('Optimisation ended.')
-
-    # Set the M-LOOP session and index to None if they exist
     set_globals_mloop()
 
-    # Set the optimisation parameters to their best results
-    print('Setting best params in runmanager.')
-    globals_dict = dict(
-        zip(opt_dict['params_to_change'], controller.best_params)
-    )
+    # Set the optimisation globals to their best results
+    print('Setting best parameters in runmanager.')
+    globals_dict = dict(zip(interface.config['mloop_params'], controller.best_params))
     set_globals(globals_dict)
 
-    # Format the results
+    # Return the results in a dictionary
     opt_results = {}
     opt_results['best_params'] = controller.best_params
     opt_results['best_cost'] = controller.best_cost

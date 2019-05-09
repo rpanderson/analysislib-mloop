@@ -1,7 +1,7 @@
 import lyse
 import numpy as np
 import os
-import config_get
+import mloop_config
 
 try:
     from labscript_utils import check_version
@@ -11,62 +11,73 @@ except ImportError:
 check_version('lyse', '2.5.0', '3.0')
 check_version('zprocess', '2.13.1', '3.0')
 check_version('labscript_utils', '2.12.5', '3.0')
-# check_version('runmanager', '2.5.0', '3.0')
 
 
-def lorentzian(x, s=0.05):
-    return 1 / (1 + x ** 2) + s * np.random.randn()
+def cost_analysis(cost_key=None, maximize=True, x=None):
+    """Return a cost dictionary to M-LOOP with at least:
+      {'bad': True} or {'cost': float}.
+    - Look for the latest cost in the cost_key column of the lyse
+    - DataFrame and an uncertainty ('u_' prefix at the lowest level).
+    - Report bad shot to M-LOOP if cost is nan or inf.
+    - Negate value in DataFrame if maximize = True.
+    - Fallback to reporting a constant or fake cost (from x).
+    """
+    cost_dict = {}
 
-
-def cost_analysis(key_path=[], ignore_nans=False, maximize=True, x=None):
     # Retrieve current lyse DataFrame
     df = lyse.data()
 
-    # Retrieve most recent parameter of interest
-    if len(df) and tuple(key_path) in df:
-        rec_param = df[tuple(key_path)].iloc[-1]
-        shot_file = os.path.split(df['filepath'].iloc[-1])[-1]
-    # If it doesn't exist, use the latest M-LOOP parameter value
-    elif x is None:
-        rec_param = 1.2
-        shot_file = '<fake_shot>'
-    else:
-        rec_param = lorentzian(x)
-        shot_file = '<fake_data>'
+    # Use the most recent shot
+    ix = -1
 
-    if ignore_nans and np.isnan(rec_param):
-        return None
+    # Retrieve cost from specified column
+    if len(df) and cost_key in df:
+        shot_file = os.path.split(df['filepath'].iloc[ix])[-1]
+        cost = df[cost_key].iloc[ix]
+        if np.isnan(cost) or np.isinf(cost):
+            cost_dict['bad'] = True
+        else:
+            cost_dict['cost'] = (1 - 2 * maximize) * cost
+        u_cost_key = cost_key[:-1] + ('u_' + cost_key[-1], )
+        if tuple(u_cost_key) in df:
+            cost_dict['uncer'] = df[cost_key].iloc[ix]
+
+    # If it doesn't exist, generate a fake cost
+    elif x is not None:
+        from fake_result import fake_result
+        cost_dict['cost'] = (1 - 2 * maximize) * fake_result(x)
+        shot_file = '<fake_cost>'
+
+    # Or just use a constant cost (for debugging)
     else:
-        # Return cost function such that result is maximised
-        print('Returning cost_analysis based on {:}'.format(shot_file))
-        if maximize:
-            rec_param *= -1
-        return rec_param
+        cost_dict['cost'] = 1.2
+        shot_file = '<constant_cost>'
+
+    print('Returning cost from {:}'.format(shot_file))
+    return cost_dict
 
 
 if __name__ == '__main__':
-    # Runs each time this analysis routine does
-    mloop_config = config_get.cfgget()
-    if not hasattr(lyse.routine_storage, "queue"):
-        print("First execution of lyse routine...")
+    config = mloop_config.get()
+    if not hasattr(lyse.routine_storage, 'queue'):
+        print('First execution of lyse routine...')
         import Queue
         lyse.routine_storage.queue = Queue.Queue()
     if (
-        hasattr(lyse.routine_storage, "optimisation")
+        hasattr(lyse.routine_storage, 'optimisation')
         and lyse.routine_storage.optimisation.is_alive()
     ):
         lyse.routine_storage.queue.put(
             cost_analysis(
-                key_path=mloop_config['opt_param'] if not mloop_config['mock'] else [],
-                ignore_nans=mloop_config['ignore_nans'],
-                maximize=mloop_config['maximize'],
-                x=lyse.routine_storage.x if mloop_config['mock'] else None,
+                cost_key=config['cost_key'] if not config['mock'] else [],
+                maximize=config['maximize'],
+                x=lyse.routine_storage.x if config['mock'] else None,
             )
         )
     else:
-        print("(Re)starting optimisation process...")
+        print('(Re)starting optimisation process...')
         import threading
-        from mloop_interface import optimus
-        lyse.routine_storage.optimisation = threading.Thread(target=optimus)
+        import mloop_interface
+        lyse.routine_storage.optimisation = threading.Thread(target=mloop_interface.main)
         lyse.routine_storage.optimisation.daemon = True
         lyse.routine_storage.optimisation.start()
