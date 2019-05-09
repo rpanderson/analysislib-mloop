@@ -36,7 +36,9 @@ The following assumes you already have an experiment controlled by the labscript
     * `mloop_params`: Dictionary of optimisation parameters, specified as (`global_name`, `dict`) pairs, where `dict` is used to create `min_boundary`, `max_boundary`, and `first_params` lists to meet [M-LOOP specifications](https://m-loop.readthedocs.io/en/latest/tutorials.html#parameter-settings).
 
 3. **Load the analysis routine that computes the quantity you want to optimise into [lyse](https://bitbucket.org/labscript_suite/lyse).** This routine should update `cost_key` of the lyse dataframe by calling the `save_result` (or its variants) of a `lyse.Run`. For the above parameters, this would be `fake_result.py` containing:
-
+        
+        import lyse
+        
         run = lyse.Run(lyse.path)
         
         # Your single-shot analysis code goes here
@@ -59,7 +61,27 @@ The following assumes you already have an experiment controlled by the labscript
 
 ### Notes
 
-The `mloop_multishot.py` script can be loaded as a single-shot analysis routine if `cost_key` derives from another single-shot routine, so long as it runs _after_ that routine.
+#### Uncertainties
+
+Uncertaintes in the cost can be specified by saving the uncertainty with a name `'u_' + result_name`. For the example in step (3) above, this can be done as follows:
+
+```python
+
+import lyse
+
+run = lyse.Run(lyse.path)
+
+# Your single-shot analysis code goes here
+
+run.save_result('y', your_result)
+run.save_result('u_y', u_your_result)
+
+# or...
+
+run.save_results_dict({'y', (your_result, u_your_result)}, uncertainties=True)
+```
+
+#### Multi-shot cost evaluation 
 
 The cost can be the result of multi-shot analysis (requiring more than one shot to evaluate). Suppose you only want to return a cost value after:
 
@@ -78,7 +100,12 @@ run = lyse.Run(h5_path=df.filepath.iloc[-1])
 run.save_result(name='y', value=your_result if your_condition else np.nan)
 ```
 
-Shots with `your_condition = False` will be reported as 'bad' to M-LOOP, which postpones the next iteration of optimisation.
+... and set `ignore_bad = true` in the analysis section of `mloop_config.ini`. Shots with `your_condition = False` will be not elicit a new cost, thus postponing the next iteration of optimisation. An example of such a multi-shot routine can be found in fake_result_multishot.py.
+
+#### Can mloop_multishot.py be a single-shot routine?
+
+The `mloop_multishot.py` script can be loaded as a single-shot analysis routine if `cost_key` derives from another single-shot routine, so long as it runs _after_ that routine.
+
 
 ## Implementation
 
