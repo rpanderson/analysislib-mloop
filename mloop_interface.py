@@ -93,6 +93,13 @@ def optimus():
     # Set the M-LOOP session and index to None if they exist
     set_globals_mloop()
 
+    # Set the optimisation parameters to their best results
+    print('Setting best params in runmanager.')
+    globals_dict = dict(
+        zip(opt_dict['params_to_change'], controller.best_params)
+    )
+    set_globals(globals_dict)
+
     # Format the results
     opt_results = {}
     opt_results['best_params'] = controller.best_params

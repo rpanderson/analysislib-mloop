@@ -18,7 +18,7 @@ def lorentzian(x, s=0.05):
     return 1 / (1 + x ** 2) + s * np.random.randn()
 
 
-def cost_analysis(key_path=[], ignore_nans=False, x=None):
+def cost_analysis(key_path=[], ignore_nans=False, maximize=True, x=None):
     # Retrieve current lyse DataFrame
     df = lyse.data()
 
@@ -39,7 +39,9 @@ def cost_analysis(key_path=[], ignore_nans=False, x=None):
     else:
         # Return cost function such that result is maximised
         print('Returning cost_analysis based on {:}'.format(shot_file))
-        return -1.0 * rec_param
+        if maximize:
+            rec_param *= -1
+        return rec_param
 
 
 if __name__ == '__main__':
@@ -57,6 +59,7 @@ if __name__ == '__main__':
             cost_analysis(
                 key_path=mloop_config['opt_param'] if not mloop_config['mock'] else [],
                 ignore_nans=mloop_config['ignore_nans'],
+                maximize=mloop_config['maximize'],
                 x=lyse.routine_storage.x if mloop_config['mock'] else None,
             )
         )
