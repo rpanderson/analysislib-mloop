@@ -35,6 +35,8 @@ def get(config_path=None):
         config["ANALYSIS"]["cost_key"] = '["fake_result", "y"]'
         # Maximize cost_key (negate when reporting cost)
         config["ANALYSIS"]["maximize"] = 'true'
+        # Don't report to M-LOOP if a shot is deemed bad
+        config["ANALYSIS"]["ignore_bad"] = 'true'
 
         # M-LOOP parameters
         config["MLOOP"] = {}

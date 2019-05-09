@@ -18,6 +18,8 @@ if __name__ == '__main__':
     run = lyse.Run(lyse.path)
     run_globals = run.get_globals()
     y = fake_result(run_globals['x'])
+    # Give a nan result occasionally to test bad shots
+    # Ensure ignore_bad = false in mloop_config.ini.
     if np.random.rand() < 0.9:
         run.save_result('y', y)
         run.save_result('u_y', 0.01)
