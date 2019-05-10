@@ -5,7 +5,7 @@ This repository implements machine-learning online optimisation of [labscript](h
 ## Requirements
 
 * [lyse](https://bitbucket.org/labscript_suite/lyse) 2.5.0
-* [runmanager](https://bitbucket.org/labscript_suite/runmanager) 2.4.0+ [remote](https://bitbucket.org/cbillington/runmanager/branch/remote) branch
+* [runmanager](https://bitbucket.org/labscript_suite/runmanager) 2.4.1+ [remote](https://bitbucket.org/cbillington/runmanager/branch/remote) branch
 * [labscript_utils](https://bitbucket.org/labscript_suite/labscript_utils) 2.12.4
 * [zprocess](https://pypi.org/project/zprocess) 2.13.2
 * [M-LOOP](https://m-loop.readthedocs.io/en/latest/install.html) 2.2.0+
@@ -14,7 +14,7 @@ This repository implements machine-learning online optimisation of [labscript](h
 
 The following assumes you already have an experiment controlled by the labscript suite. 
 
-1. **Specify server and port of [runmanager](https://bitbucket.org/labscript_suite/runmanager) in your labconfig,** i.e. ensure you have the following entries if their values differ from the defaults:
+1. **Specify server and port of [runmanager](https://bitbucket.org/labscript_suite/runmanager) in your labconfig,** i.e. ensure you have the following entries if their values differ from these defaults:
 
         [servers]
         runmanager = localhost
@@ -31,7 +31,7 @@ The following assumes you already have an experiment controlled by the labscript
         [MLOOP]
         mloop_params = {"x": {"min": -5.0, "max": 5.0, "start": -2.0} }
         
-    * `cost_key`: Column of the lyse dataframe to derive the cost from, specified as a [routine name, result name] pair. The present cost comes from the most recent value in this column, i.e. `cost = df[cost_key].iloc[-1]`.
+    * `cost_key`: Column of the lyse dataframe to derive the cost from, specified as a `[routine_name, result_name]` pair. The present cost comes from the most recent value in this column, i.e. `cost = df[cost_key].iloc[-1]`.
     * `maximize`: Whether or not to negate the above value, since M-LOOP will minimize the cost.
     * `mloop_params`: Dictionary of optimisation parameters, specified as (`global_name`, `dict`) pairs, where `dict` is used to create `min_boundary`, `max_boundary`, and `first_params` lists to meet [M-LOOP specifications](https://m-loop.readthedocs.io/en/latest/tutorials.html#parameter-settings).
 
@@ -98,11 +98,11 @@ run = lyse.Run(h5_path=df.filepath.iloc[-1])
 run.save_result(name='y', value=your_result if your_condition else np.nan)
 ```
 
-... and set `ignore_bad = true` in the analysis section of `mloop_config.ini`. Shots with `your_condition = False` will be not elicit a new cost, thus postponing the next iteration of optimisation. An example of such a multi-shot routine can be found in fake_result_multishot.py.
+... and set `ignore_bad = true` in the analysis section of `mloop_config.ini`. Shots with `your_condition = False` will be not elicit the cost to be updated, thus postponing the next iteration of optimisation. An example of such a multi-shot routine can be found in fake_result_multishot.py.
 
 ### Analysing optimistion results
 
-Since cost evaluation can be based on one or more shots from one or more sequences, additional information is required to analyse a single M-LOOP optimisation session in lyse. For example, for per-shot cost evaluation (e.g. of a single-shot analysis result), each M-LOOP iteration will correspond to a one-shot sequence. For multi-shot cost evaluation, a single M-LOOP iteration might correspond to a single multi-shot sequence, repeated execution of the same shot (same `sequence_index` and `run number`, different `run repeat`), or something else. To keep track of this, we intend to add details of the optimisation session to the sequence attributes (written to each shot file). For the time being, you can keep track of the `mloop_session` and `mloop_iteration` by creating these in any active globals group in runmanager. They will be updated during each optimisation, and reset to None following the completion of an M-LOOP session. This then permits you to analyse shots from a particular optimisation session as follows:
+Since cost evaluation can be based on one or more shots from one or more sequences, additional information is required to analyse a single M-LOOP optimisation session in lyse. Per-shot cost evaluation (e.g. of a single-shot analysis result) results in a single-shot sequence per M-LOOP iteration. For multi-shot cost evaluation, a single M-LOOP iteration might correspond to a single multi-shot sequence, repeated execution of the same shot (same `sequence_index` and `run number`, different `run repeat`), or something else. To keep track of this, we intend to add details of the optimisation session to the sequence attributes (written to each shot file). For the time being, you can keep track of the `mloop_session` and `mloop_iteration` by creating globals with these names in any active group in runmanager. They will be updated during each optimisation, and reset to `None` following the completion of an M-LOOP session. This then permits you to analyse shots from a particular optimisation session as follows:
 
 ```python
 
@@ -122,6 +122,31 @@ M-LOOP itself has [visualisation functions](https://m-loop.readthedocs.io/en/lat
 
 The `mloop_multishot.py` script can be loaded as a single-shot analysis routine if `cost_key` derives from another single-shot routine, so long as it runs _after_ that routine.
 
+### Is this implementation limited to M-LOOP?
+
+Despite the name, `mloop_multishot.py` can be used for other automated optimisation and feed-forward. You can run any function the optimisation thread (see below), so long as it conforms to the following specification:
+
+   * Calls `lyse.routine_storage.queue.get()` iteratively.
+   * Uses the `cost_dict` returned to modify global variables (which ones and how is up to you) using `runmanager.remote.set_globals()`.
+   * Calls `runmanager.remote.engage()` when a new shot or sequence of shots is required to get the next cost (optional).
+
+Feed-forward stabilisation (e.g. of some drifting quantity) could be readily achieved using a single-iteration optimisation session, replacing `main` of mloop_interface.py with, for example:
+
+```python
+import lyse
+from runmanager.remote import set_globals, engage
+
+def main():
+    # cost_dict['cost'] is likely some error signal you are trying to zero
+    cost_dict = lyse.routine_storage.queue.get()
+    
+    # Your code goes here that determines the next value of a stabilisation parameter
+    set_globals('some_global': new_value)
+
+    return
+```
+
+If an alternative optimisation library requires something other than `cost_dict` (with keys `cost`, `uncer`, `bad`), you can modify `cost_analysis` accordingly.
 
 ## Implementation
 
@@ -152,18 +177,21 @@ Shots are compiled by programmatically interacting with the runmanager GUI. The 
 
 ### Provenance
 
-The original design and implementation occurred during the summer of 2017/2018 by Josh Morris, Ethan Payne, Lincoln Turner, and I, with assistance from Chris Billington and Phil Starkey. In this incarnation, the M-LOOP interface and experiment interface were run as standalone processes in a shell, with communication between these two actors and the analysis interface being done over a ZMQ socket. This required careful execution of the scripts in the right order, and for the M-LOOP interface to be restarted after each optimistion, and was a bit clunky/flaky.
+The original design and implementation occurred during the summer of 2017/2018 by Josh Morris, Ethan Payne, Lincoln Turner, and I, with assistance from Chris Billington and Phil Starkey. In this incarnation, the M-LOOP interface and experiment interface were run as standalone processes in a shell, with communication between these two actors and the analysis interface being done over a ZMQ socket. Experiment scripts were compiled against an otherwise empty 'template' shot file of globals, which was modified in place at each M-LOOP iteration. This required careful execution of the scripts in the right order, and for the M-LOOP interface to be restarted after each optimistion, and was a bit clunky/flaky.
 
-In 2019 we improved this original implementation using a single lyse analysis routine (the skeleton of which was written by Phil Starkey), and remote control of the runmanager GUI. This required the following enhancements and bugfixes to the labscript suite, which Chris Billington (mostly) and I undertook:
+In 2019 we improved this original implementation using a single lyse analysis routine (the skeleton of which was written by Phil Starkey), and [remote control of the runmanager GUI](https://bitbucket.org/labscript_suite/runmanager/issues/68/ui-scripting). This required the following enhancements and bugfixes to the labscript suite, which Chris Billington (mostly) and I undertook:
 
 * [lyse PR #61](https://bitbucket.org/labscript_suite/lyse/pull-requests/61): Fix for [#48](https://bitbucket.org/labscript_suite/lyse/issues/48): Make analysis_subprocess.py multiprocessing-friendly
 * [lyse PR #62](https://bitbucket.org/labscript_suite/lyse/pull-requests/62): Terminate subprocesses at shutdown
-* [labscript_utils PR #78](https://bitbucket.org/labscript_suite/labscript_utils/pull-requests/78): Import pywin32 at module-level rather than lazily
 * [runmanager PR #37](https://bitbucket.org/labscript_suite/runmanager/pull-requests/37): Basic remote control of runmanager
-   
+* [labscript_utils PR #78](https://bitbucket.org/labscript_suite/labscript_utils/pull-requests/78): Import pywin32 at module-level rather than lazily
+* [labscript PR #81](https://bitbucket.org/labscript_suite/labscript_utils/pull-requests/81): Include all package dirs in Modulewatcher whitelist
+
+M-LOOP is written and maintained by Michael Hush, along with other [M-LOOP contributors](https://m-loop.readthedocs.io/en/latest/contributing.html#contributors).
+
 ### Future improvements 
 
-* Sequence attributes that record the optimisation details. Experiment shot compilation, following runmanager [UI scripting](https://bitbucket.org/labscript_suite/runmanager/issues/68/ui-scripting).
+* Sequence attributes that record the optimisation details.
    
 ### Contributing
 
