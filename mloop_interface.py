@@ -3,7 +3,6 @@ from runmanager.remote import set_globals, engage
 import mloop_config
 from mloop.interfaces import Interface
 from mloop.controllers import create_controller
-import time
 
 
 def set_globals_mloop(mloop_session=None, mloop_iteration=None):
@@ -37,9 +36,7 @@ class LoopInterface(Interface):
             print('Requesting next shot from experiment interface...')
             globals_dict = dict(zip(self.config['mloop_params'], params_dict['params']))
             set_globals(globals_dict)
-            print('Run: {:d}'.format(self.num_in_costs))
             set_globals_mloop(mloop_iteration=self.num_in_costs)
-            time.sleep(0.05)
             engage()
         else:
             # Store a current parameter so that mloop_multishot.py can fake a cost
