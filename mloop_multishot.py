@@ -13,7 +13,7 @@ check_version('zprocess', '2.13.1', '3.0')
 check_version('labscript_utils', '2.12.5', '3.0')
 
 
-def cost_analysis(cost_key=None, maximize=True, x=None):
+def cost_analysis(cost_key=(None,), maximize=True, x=None):
     """Return a cost dictionary to M-LOOP with at least:
       {'bad': True} or {'cost': float}.
     - Look for the latest cost in the cost_key column of the lyse
@@ -22,7 +22,7 @@ def cost_analysis(cost_key=None, maximize=True, x=None):
     - Negate value in DataFrame if maximize = True.
     - Fallback to reporting a constant or fake cost (from x).
     """
-    cost_dict = {}
+    cost_dict = {'bad': False}
 
     # Retrieve current lyse DataFrame
     df = lyse.data()
@@ -38,15 +38,13 @@ def cost_analysis(cost_key=None, maximize=True, x=None):
             cost_dict['bad'] = True
         else:
             cost_dict['cost'] = (1 - 2 * maximize) * cost
-            cost_dict['bad'] = False
         u_cost_key = cost_key[:-1] + ('u_' + cost_key[-1],)
-        if tuple(u_cost_key) in df:
+        if u_cost_key in df:
             cost_dict['uncer'] = df[cost_key].iloc[ix]
 
     # If it doesn't exist, generate a fake cost
     elif x is not None:
         from fake_result import fake_result
-
         cost_dict['cost'] = (1 - 2 * maximize) * fake_result(x)
         shot_file = '<fake_cost>'
 
