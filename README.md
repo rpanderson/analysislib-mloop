@@ -20,7 +20,7 @@ The following assumes you already have an experiment controlled by the labscript
         runmanager = localhost
     
         [ports]
-        runmanager = 42423
+        runmanager = 42523
 
 2. **Configure optimisation settings in `mloop_config.ini`.** There is a tracked version of this file in the repository. At a bare minimum, you should modify the following:
 
