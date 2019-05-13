@@ -1,4 +1,5 @@
 import lyse
+import runmanager.remote as rm
 import numpy as np
 import os
 import mloop_config
@@ -11,6 +12,57 @@ except ImportError:
 check_version('lyse', '2.5.0', '3.0')
 check_version('zprocess', '2.13.1', '3.0')
 check_version('labscript_utils', '2.12.5', '3.0')
+
+
+def check_runmanager(config):
+    msgs = ['WARNING(s):']
+    rm_globals = rm.get_globals()
+    if not all([x in rm_globals for x in config['mloop_params']]):
+        msgs.append('Not all optimisation parameters present in runmanager.')
+    if not rm.get_run_shots():
+        msgs.append('Run shot(s) not selected in runmanager.')
+    if rm.error_in_globals():
+        msgs.append('Error in runmanager globals.')
+    n_shots = rm.n_shots()
+    if n_shots > 1 and not config['ignore_bad']:
+        msgs.append(
+            f'runmanager set to compile {n_shots:d} shots per request, but your '
+            + 'mloop_config has ignore_bad = False. You are advised to (i) remove '
+            + 'iterable globals so as to compile one shot per cost; or set ignore_bad '
+            + '= True in your mloop_config and only return one cost with bad = False '
+            + ' per sequence.'
+        )
+    if len(msgs) > 1:
+        print('\n'.join(msgs))
+    return len(msgs) <= 1
+
+
+def verify_globals(config):
+    # Get the current runmanager globals
+    rm_globals = rm.get_globals()
+    current_values = [rm_globals[name] for name in config['mloop_params']]
+
+    # Retrieve the parameter values requested by M-LOOP on this iteration
+    requested_values = lyse.routine_storage.params
+    requested_dict = dict(zip(config['mloop_params'], requested_values))
+
+    # Get the parameter values for the shot we just computed the cost for
+    df = lyse.data()
+    ix = -1
+    run = lyse.Run(df['filepath'].iloc[ix])
+    shot_globals = run.get_globals()
+    shot_values = [shot_globals[name] for name in config['mloop_params']]
+
+    # Verify integrity by cross-checking against what was requested
+    if current_values != requested_values:
+        print('Cost requested for different values to those in runmanager.')
+        print('Please add an executed shot to lyse with: ', requested_dict)
+        return False
+    if shot_values != requested_values:
+        print('Cost requested for different values to those used to compute cost.')
+        print('Please add an executed shot to lyse with: ', requested_dict)
+        return False
+    return True
 
 
 def cost_analysis(cost_key=(None,), maximize=True, x=None):
@@ -69,14 +121,20 @@ if __name__ == '__main__':
         cost_dict = cost_analysis(
             cost_key=config['cost_key'] if not config['mock'] else [],
             maximize=config['maximize'],
-            x=lyse.routine_storage.x if config['mock'] else None,
+            x=lyse.routine_storage.params[0] if config['mock'] else None,
         )
-        if not cost_dict['bad'] or not config['ignore_bad']:
+        if verify_globals(config) and (not cost_dict['bad'] or not config['ignore_bad']):
             lyse.routine_storage.queue.put(cost_dict)
-    else:
+        check_runmanager(config)
+    elif check_runmanager(config):
         print('(Re)starting optimisation process...')
         import threading
         import mloop_interface
         lyse.routine_storage.optimisation = threading.Thread(target=mloop_interface.main)
         lyse.routine_storage.optimisation.daemon = True
         lyse.routine_storage.optimisation.start()
+    else:
+        print(
+            '\nNot (re)starting optimisation process.',
+            'Please address above warnings before trying again.',
+        )
