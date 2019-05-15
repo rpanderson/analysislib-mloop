@@ -40,7 +40,7 @@ def cost_analysis(cost_key=(None,), maximize=True, x=None):
             cost_dict['cost'] = (1 - 2 * maximize) * cost
         u_cost_key = cost_key[:-1] + ('u_' + cost_key[-1],)
         if u_cost_key in df:
-            cost_dict['uncer'] = df[cost_key].iloc[ix]
+            cost_dict['uncer'] = df[u_cost_key].iloc[ix]
 
     # If it doesn't exist, generate a fake cost
     elif x is not None:
