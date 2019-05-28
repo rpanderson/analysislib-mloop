@@ -33,7 +33,7 @@ def cost_analysis(cost_key=(None,), maximize=True, x=None):
     # Retrieve cost from specified column
     if len(df) and cost_key in df:
         shot_file = os.path.split(df['filepath'].iloc[ix])[-1]
-        cost = df[cost_key].iloc[ix]
+        cost = (df[cost_key].astype(float).values)[ix]
         if np.isnan(cost) or np.isinf(cost):
             cost_dict['bad'] = True
         else:
