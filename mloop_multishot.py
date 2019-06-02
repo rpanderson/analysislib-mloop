@@ -60,8 +60,12 @@ if __name__ == '__main__':
     config = mloop_config.get()
     if not hasattr(lyse.routine_storage, 'queue'):
         print('First execution of lyse routine...')
-        import Queue
-        lyse.routine_storage.queue = Queue.Queue()
+        try:
+            from queue import Queue
+        except ImportError:
+            # PY2
+            from Queue import Queue
+        lyse.routine_storage.queue = Queue()
     if (
         hasattr(lyse.routine_storage, 'optimisation')
         and lyse.routine_storage.optimisation.is_alive()
