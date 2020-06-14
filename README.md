@@ -1,20 +1,20 @@
 ## Description
 
-This repository implements machine-learning online optimisation of [labscript](https://labscriptsuite.org) controlled experiments using [M-LOOP](https://m-loop.readthedocs.io).
+This repository implements machine-learning online optimisation of [_labscript suite_](http://labscriptsuite.org) controlled experiments using [M-LOOP](https://m-loop.readthedocs.io).
 
 ## Requirements
 
-* [lyse](https://bitbucket.org/labscript_suite/lyse) 2.5.0
-* [runmanager](https://bitbucket.org/labscript_suite/runmanager) 2.4.1+ [remote](https://bitbucket.org/cbillington/runmanager/branch/remote) branch
-* [labscript_utils](https://bitbucket.org/labscript_suite/labscript_utils) 2.12.4
+* [lyse](https://github.com/labscript-suite/lyse) 2.5.0
+* [runmanager](https://github.com/labscript-suite/runmanager) 2.5.0+ ([remote-bugfix](http://bitbucket-archive.labscriptsuite.org/#!/labscript_suite/runmanager/pull-requests/39/page/1))
+* [labscript_utils](https://github.com/labscript-suite/labscript_utils) 2.12.4
 * [zprocess](https://pypi.org/project/zprocess) 2.13.2
 * [M-LOOP](https://m-loop.readthedocs.io/en/latest/install.html) 2.2.0+
 
 ## Usage
 
-The following assumes you already have an experiment controlled by the labscript suite. 
+The following assumes you already have an experiment controlled by the _labscript suite_. 
 
-1. **Specify server and port of [runmanager](https://bitbucket.org/labscript_suite/runmanager) in your labconfig,** i.e. ensure you have the following entries if their values differ from these defaults:
+1. **Specify server and port of [runmanager](https://github.com/labscript-suite/runmanager) in your labconfig,** i.e. ensure you have the following entries if their values differ from these defaults:
 
         [servers]
         runmanager = localhost
@@ -35,7 +35,7 @@ The following assumes you already have an experiment controlled by the labscript
     * `maximize`: Whether or not to negate the above value, since M-LOOP will minimize the cost.
     * `mloop_params`: Dictionary of optimisation parameters, specified as (`global_name`, `dict`) pairs, where `dict` is used to create `min_boundary`, `max_boundary`, and `first_params` lists to meet [M-LOOP specifications](https://m-loop.readthedocs.io/en/latest/tutorials.html#parameter-settings).
 
-3. **Load the analysis routine that computes the quantity you want to optimise into [lyse](https://bitbucket.org/labscript_suite/lyse).** This routine should update `cost_key` of the lyse dataframe by calling the `save_result` (or its variants) of a `lyse.Run`. For the above parameters, this would be `fake_result.py` containing:
+3. **Load the analysis routine that computes the quantity you want to optimise into [lyse](https://github.com/labscript-suite/lyse).** This routine should update `cost_key` of the lyse dataframe by calling the `save_result` (or its variants) of a `lyse.Run`. For the above parameters, this would be `fake_result.py` containing:
         
         import lyse
         
@@ -52,7 +52,7 @@ The following assumes you already have an experiment controlled by the labscript
         + This requires the globals specified in `mloop_params` are active in runmanager; unless you
         + Set `mock = true` in `mloop_config.ini`, which bypasses shot compilation and submission, and generates a fake cost based on the current value of the first optimisation parameter. Each press of 'Run multishot analysis' will elicit another M-LOOP iteration. This is useful for testing your M-LOOP installation and the threading/multiprocessing used in this codebase, as it only requires that lyse be running (and permits you to skip creating the template file and performing steps (1) and (3) above).
     * Press the 'Engage' button in runmanager.
-    Either of these will begin an M-LOOP optimisation, with a new sequence of shots being compiled and submitted to [blacs](https://bitbucket.org/labscript_suite/blacs) each time a cost value is computed.
+    Either of these will begin an M-LOOP optimisation, with a new sequence of shots being compiled and submitted to [blacs](https://github.com/labscript-suite/blacs) each time a cost value is computed.
 
 6. **Pause optimisation** by pausing the lyse analysis queue or by unchecking (deactivating) the `mloop_multishot.py` in lyse.
 
@@ -179,15 +179,16 @@ Shots are compiled by programmatically interacting with the runmanager GUI. The 
 
 The original design and implementation occurred during the summer of 2017/2018 by Josh Morris, Ethan Payne, Lincoln Turner, and I, with assistance from Chris Billington and Phil Starkey. In this incarnation, the M-LOOP interface and experiment interface were run as standalone processes in a shell, with communication between these two actors and the analysis interface being done over a ZMQ socket. Experiment scripts were compiled against an otherwise empty 'template' shot file of globals, which was modified in place at each M-LOOP iteration. This required careful execution of the scripts in the right order, and for the M-LOOP interface to be restarted after each optimistion, and was a bit clunky/flaky.
 
-In 2019 we improved this original implementation using a single lyse analysis routine (the skeleton of which was written by Phil Starkey), and [remote control of the runmanager GUI](https://bitbucket.org/labscript_suite/runmanager/issues/68/ui-scripting). This required the following enhancements and bugfixes to the labscript suite, which Chris Billington (mostly) and I undertook:
+In 2019 we improved this original implementation using a single lyse analysis routine (the skeleton of which was written by Phil Starkey), and [remote control of the runmanager GUI](https://github.com/labscript-suite/runmanager/issues/68). This required the following enhancements and bugfixes to the labscript suite, which Chris Billington (mostly) and I undertook:
 
-* [lyse PR #61](https://bitbucket.org/labscript_suite/lyse/pull-requests/61): Fix for [#48](https://bitbucket.org/labscript_suite/lyse/issues/48): Make analysis_subprocess.py multiprocessing-friendly
-* [lyse PR #62](https://bitbucket.org/labscript_suite/lyse/pull-requests/62): Terminate subprocesses at shutdown
-* [runmanager PR #37](https://bitbucket.org/labscript_suite/runmanager/pull-requests/37): Basic remote control of runmanager
-* [labscript_utils PR #78](https://bitbucket.org/labscript_suite/labscript_utils/pull-requests/78): Import pywin32 at module-level rather than lazily
-* [labscript PR #81](https://bitbucket.org/labscript_suite/labscript_utils/pull-requests/81): Include all package dirs in Modulewatcher whitelist
+* [lyse PR #61](http://bitbucket-archive.labscriptsuite.org/#!/labscript_suite/lyse/pull-requests/61): Fix for [#48](https://github.com/labscript-suite/lyse/issues/48): Make analysis_subprocess.py multiprocessing-friendly
+* [lyse PR #62](http://bitbucket-archive.labscriptsuite.org/#!/labscript_suite/lyse/pull-requests/62): Terminate subprocesses at shutdown
+* [runmanager PR #37](http://bitbucket-archive.labscriptsuite.org/#!/labscript_suite/runmanager/pull-requests/37): Basic remote control of runmanager
+* [runmanager PR #39](http://bitbucket-archive.labscriptsuite.org/#!/labscript_suite/runmanager/pull-requests/39): Bugfix of above
+* [labscript_utils PR #78](http://bitbucket-archive.labscriptsuite.org/#!/labscript_suite/labscript_utils/pull-requests/78): Basic remote control of runmanager): Import pywin32 at module-level rather than lazily
+* [labscript PR #81](http://bitbucket-archive.labscriptsuite.org/#!/labscript_suite/labscript/pull-requests/81): Basic remote control of runmanager): Include all package dirs in Modulewatcher whitelist
 
-M-LOOP is written and maintained by Michael Hush, along with other [M-LOOP contributors](https://m-loop.readthedocs.io/en/latest/contributing.html#contributors).
+M-LOOP was written by Michael Hush and is maintained by [M-LOOP contributors](https://m-loop.readthedocs.io/en/latest/contributing.html#contributors).
 
 ### Future improvements 
 
@@ -195,6 +196,6 @@ M-LOOP is written and maintained by Michael Hush, along with other [M-LOOP contr
    
 ### Contributing
 
-If you are an existing labscript user, please test this out on your experiment! Report bugs, request new functionality, and submit pull requests using the BitBucket page for this repository.
+If you are an existing _labscript suite_ user, please test this out on your experiment! Report bugs, request new functionality, and submit pull requests using the GitHub page for this repository.
 
-If you'd like to implement machine-learning online optimisation on your shot-based, hardware-timed experiment, please consider deploying the labscript suite and M-LOOP.
+If you'd like to implement machine-learning online optimisation on your shot-based, hardware-timed experiment, please consider deploying the _labscript suite_ and M-LOOP (or another machine learning library, by adapting this extension).
