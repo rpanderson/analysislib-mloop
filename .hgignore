@@ -1,4 +1,0 @@
-syntax: glob
-*.pyc
-__pycache__
-M-LOOP_*/*
