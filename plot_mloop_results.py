@@ -14,7 +14,7 @@ try:
         gb = df.groupby('mloop_session')
         mloop_session = list(gb.groups.keys())[-1]
         subdf = gb.get_group(mloop_session)
-    except:
+    except Exception:
         # Fallback to the entire lyse DataFrame
         subdf = df
         mloop_session = None
@@ -24,5 +24,5 @@ try:
     plt.axis(ymin=0, ymax=1.1)
     plt.title('M-LOOP session: {:}'.format(mloop_session))
     plt.show()
-except:
+except Exception:
     pass

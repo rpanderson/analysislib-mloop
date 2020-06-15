@@ -12,38 +12,44 @@ This repository implements machine-learning online optimisation of [_labscript s
 
 ## Usage
 
-The following assumes you already have an experiment controlled by the _labscript suite_. 
+The following assumes you already have an experiment controlled by the _labscript suite_.
 
 1. **Specify server and port of [runmanager](https://github.com/labscript-suite/runmanager) in your labconfig,** i.e. ensure you have the following entries if their values differ from these defaults:
 
-        [servers]
-        runmanager = localhost
-    
-        [ports]
-        runmanager = 42523
+```ini
+[servers]
+runmanager = localhost
+
+[ports]
+runmanager = 42523
+```
 
 2. **Configure optimisation settings in `mloop_config.ini`.** There is a tracked version of this file in the repository. At a bare minimum, you should modify the following:
 
-        [ANALYSIS]
-        cost_key = ["fake_result", "y"]
-        maximize = true
-        
-        [MLOOP]
-        mloop_params = {"x": {"min": -5.0, "max": 5.0, "start": -2.0} }
-        
-    * `cost_key`: Column of the lyse dataframe to derive the cost from, specified as a `[routine_name, result_name]` pair. The present cost comes from the most recent value in this column, i.e. `cost = df[cost_key].iloc[-1]`.
-    * `maximize`: Whether or not to negate the above value, since M-LOOP will minimize the cost.
-    * `mloop_params`: Dictionary of optimisation parameters, specified as (`global_name`, `dict`) pairs, where `dict` is used to create `min_boundary`, `max_boundary`, and `first_params` lists to meet [M-LOOP specifications](https://m-loop.readthedocs.io/en/latest/tutorials.html#parameter-settings).
+```ini
+[ANALYSIS]
+cost_key = ["fake_result", "y"]
+maximize = true
+
+[MLOOP]
+mloop_params = {"x": {"min": -5.0, "max": 5.0, "start": -2.0} }
+```
+
+  * `cost_key`: Column of the lyse dataframe to derive the cost from, specified as a `[routine_name, result_name]` pair. The present cost comes from the most recent value in this column, i.e. `cost = df[cost_key].iloc[-1]`.
+  * `maximize`: Whether or not to negate the above value, since M-LOOP will minimize the cost.
+  * `mloop_params`: Dictionary of optimisation parameters, specified as (`global_name`, `dict`) pairs, where `dict` is used to create `min_boundary`, `max_boundary`, and `first_params` lists to meet [M-LOOP specifications](https://m-loop.readthedocs.io/en/latest/tutorials.html#parameter-settings).
 
 3. **Load the analysis routine that computes the quantity you want to optimise into [lyse](https://github.com/labscript-suite/lyse).** This routine should update `cost_key` of the lyse dataframe by calling the `save_result` (or its variants) of a `lyse.Run`. For the above parameters, this would be `fake_result.py` containing:
-        
-        import lyse
-        
-        run = lyse.Run(lyse.path)
-        
-        # Your single-shot analysis code goes here
-        
-        run.save_result('y', your_result)
+
+```python
+import lyse
+
+run = lyse.Run(lyse.path)
+
+# Your single-shot analysis code goes here
+
+run.save_result('y', your_result)
+```
 
 4. **Load `mloop_multishot.py` as an analysis routine in lyse.** Ensure that it runs after the analysis routine that updates `cost_key`, e.g. `fake_result.py` in the above configuration, using the (move routine) up/down buttons.
 
@@ -64,7 +70,6 @@ The following assumes you already have an experiment controlled by the _labscrip
 Uncertaintes in the cost can be specified by saving the uncertainty with a name `'u_' + result_name`. For the example in step (3) above, this can be done as follows:
 
 ```python
-
 import lyse
 
 run = lyse.Run(lyse.path)
@@ -74,22 +79,22 @@ run = lyse.Run(lyse.path)
 run.save_result('y', your_result)
 run.save_result('u_y', u_your_result)
 
-# or...
+# ... or:
 
 run.save_results_dict({'y', (your_result, u_your_result)}, uncertainties=True)
 ```
 
-### Multi-shot cost evaluation 
+
+### Multi-shot cost evaluation
 
 The cost can be the result of multi-shot analysis (requiring more than one shot to evaluate). Suppose you only want to return a cost value after:
 
-* a certain number of shots (repeats or those in a labscript sequence) have completed, and/or 
-* the uncertainty in some multi-shot analysis result is below some threshold.
+  * a certain number of shots (repeats or those in a labscript sequence) have completed, and/or
+  * the uncertainty in some multi-shot analysis result is below some threshold.
 
 In such cases, you would include the following in your multi-shot analysis routine:
 
 ```python
-
 df = lyse.data()
 
 # Your analysis on the lyse DataFrame goes here
@@ -100,12 +105,13 @@ run.save_result(name='y', value=your_result if your_condition else np.nan)
 
 ... and set `ignore_bad = true` in the analysis section of `mloop_config.ini`. Shots with `your_condition = False` will be not elicit the cost to be updated, thus postponing the next iteration of optimisation. An example of such a multi-shot routine can be found in fake_result_multishot.py.
 
+
 ### Analysing optimistion results
 
 Since cost evaluation can be based on one or more shots from one or more sequences, additional information is required to analyse a single M-LOOP optimisation session in lyse. Per-shot cost evaluation (e.g. of a single-shot analysis result) results in a single-shot sequence per M-LOOP iteration. For multi-shot cost evaluation, a single M-LOOP iteration might correspond to a single multi-shot sequence, repeated execution of the same shot (same `sequence_index` and `run number`, different `run repeat`), or something else. To keep track of this, we intend to add details of the optimisation session to the sequence attributes (written to each shot file). For the time being, you can keep track of the `mloop_session` and `mloop_iteration` by creating globals with these names in any active group in runmanager. They will be updated during each optimisation, and reset to `None` following the completion of an M-LOOP session. This then permits you to analyse shots from a particular optimisation session as follows:
 
-```python
 
+```python
 import lyse
 
 df = lyse.data()
@@ -118,17 +124,19 @@ There's an example of this in plot_mloop_results.py.
 
 M-LOOP itself has [visualisation functions](https://m-loop.readthedocs.io/en/latest/tutorials.html#visualizations) which can be run on the log/archive files it creates.
 
+
 ### Can mloop_multishot.py be a single-shot routine?
 
 The `mloop_multishot.py` script can be loaded as a single-shot analysis routine if `cost_key` derives from another single-shot routine, so long as it runs _after_ that routine.
+
 
 ### Is this implementation limited to M-LOOP?
 
 Despite the name, `mloop_multishot.py` can be used for other automated optimisation and feed-forward. You can run any function the optimisation thread (see below), so long as it conforms to the following specification:
 
-   * Calls `lyse.routine_storage.queue.get()` iteratively.
-   * Uses the `cost_dict` returned to modify global variables (which ones and how is up to you) using `runmanager.remote.set_globals()`.
-   * Calls `runmanager.remote.engage()` when a new shot or sequence of shots is required to get the next cost (optional).
+  * Calls `lyse.routine_storage.queue.get()` iteratively.
+  * Uses the `cost_dict` returned to modify global variables (which ones and how is up to you) using `runmanager.remote.set_globals()`.
+  * Calls `runmanager.remote.engage()` when a new shot or sequence of shots is required to get the next cost (optional).
 
 Feed-forward stabilisation (e.g. of some drifting quantity) could be readily achieved using a single-iteration optimisation session, replacing `main` of mloop_interface.py with, for example:
 
@@ -139,7 +147,7 @@ from runmanager.remote import set_globals, engage
 def main():
     # cost_dict['cost'] is likely some error signal you are trying to zero
     cost_dict = lyse.routine_storage.queue.get()
-    
+
     # Your code goes here that determines the next value of a stabilisation parameter
     set_globals('some_global': new_value)
 
@@ -148,31 +156,33 @@ def main():
 
 If an alternative optimisation library requires something other than `cost_dict` (with keys `cost`, `uncer`, `bad`), you can modify `cost_analysis` accordingly.
 
+
 ## Implementation
 
 We use `lyse.routine_storage` to store:
 
-* a long-lived thread (`threading.Thread`) to run the main method of `mloop_interface.py` within `mloop_multishot.py`,
-* a queue (`Queue.Queue`) for `mloop_multishot.py`/`mloop_interface.py` to put/get the latest M-LOOP cost dictionary, and
-* (when `mock = true`) a variable `x` for `mloop_interface.py`/`mloop_multishot.py` to set/get, for spoofing an `cost_key` that changes with the current value of the (first) M-LOOP optimisation parameter.
+  * a long-lived thread (`threading.Thread`) to run the main method of `mloop_interface.py` within `mloop_multishot.py`,
+  * a queue (`Queue.Queue`) for `mloop_multishot.py`/`mloop_interface.py` to put/get the latest M-LOOP cost dictionary, and
+  * (when `mock = true`) a variable `x` for `mloop_interface.py`/`mloop_multishot.py` to set/get, for spoofing an `cost_key` that changes with the current value of the (first) M-LOOP optimisation parameter.
 
 Each time the `mloop_multishot.py` routine runs in lyse, we first check to see if there is an active optimisation by polling the optimisation thread. If it doesn't exist or is not alive, we start a new thread. If there's an optimisation underway, we retrieve the latest cost value from the lyse dataframe (see the `cost_analysis` function) and put it in the `lyse.routine_storage.queue`.
 
 The `LoopInterface` subclass (of `mloop.interface.Interface`) has a method `get_next_cost_dict`, which:
 
-* requests the next experiment shot(s) be compiled and run using `runmanager.remote.set_global()` and `runmanager.remote.engage()`, and
-* waits for the next cost using a blocking call to `lyse.routine_storage.queue.get()`.
+  * requests the next experiment shot(s) be compiled and run using `runmanager.remote.set_global()` and `runmanager.remote.engage()`, and
+  * waits for the next cost using a blocking call to `lyse.routine_storage.queue.get()`.
 
 The main method of `mloop_interface.py` follows the trend of the [M-LOOP >> Python controlled experiment tutorial](https://m-loop.readthedocs.io/en/latest/tutorials.html#python-controlled-experiment):
 
-* Instantiate `LoopInterface`, an M-LOOP optmiser interface.
-* Get the current configuration.
-* Create an `mloop.controllers.Controller` instance for the optimiser interface, using the above configuration.
-* Run the `optimize` method of this controller.
-* Return a dictionary of `best_params`, `best_cost`, `best_uncer`, `best_index`.
+  * Instantiate `LoopInterface`, an M-LOOP optmiser interface.
+  * Get the current configuration.
+  * Create an `mloop.controllers.Controller` instance for the optimiser interface, using the above configuration.
+  * Run the `optimize` method of this controller.
+  * Return a dictionary of `best_params`, `best_cost`, `best_uncer`, `best_index`.
 
 Shots are compiled by programmatically interacting with the runmanager GUI. The current value of the optimisation parameters used by M-LOOP are reflected in runmanager, and when a given optimisation is complete, the best parameters are entered into runmanager programmatically.
- 
+
+
 ## Roadmap
 
 ### Provenance
@@ -181,19 +191,21 @@ The original design and implementation occurred during the summer of 2017/2018 b
 
 In 2019 we improved this original implementation using a single lyse analysis routine (the skeleton of which was written by Phil Starkey), and [remote control of the runmanager GUI](https://github.com/labscript-suite/runmanager/issues/68). This required the following enhancements and bugfixes to the labscript suite, which Chris Billington (mostly) and I undertook:
 
-* [lyse PR #61](http://bitbucket-archive.labscriptsuite.org/#!/labscript_suite/lyse/pull-requests/61): Fix for [#48](https://github.com/labscript-suite/lyse/issues/48): Make analysis_subprocess.py multiprocessing-friendly
-* [lyse PR #62](http://bitbucket-archive.labscriptsuite.org/#!/labscript_suite/lyse/pull-requests/62): Terminate subprocesses at shutdown
-* [runmanager PR #37](http://bitbucket-archive.labscriptsuite.org/#!/labscript_suite/runmanager/pull-requests/37): Basic remote control of runmanager
-* [runmanager PR #39](http://bitbucket-archive.labscriptsuite.org/#!/labscript_suite/runmanager/pull-requests/39): Bugfix of above
-* [labscript_utils PR #78](http://bitbucket-archive.labscriptsuite.org/#!/labscript_suite/labscript_utils/pull-requests/78): Basic remote control of runmanager): Import pywin32 at module-level rather than lazily
-* [labscript PR #81](http://bitbucket-archive.labscriptsuite.org/#!/labscript_suite/labscript/pull-requests/81): Basic remote control of runmanager): Include all package dirs in Modulewatcher whitelist
+  * [lyse PR #61](http://bitbucket-archive.labscriptsuite.org/#!/labscript_suite/lyse/pull-requests/61): Fix for [#48](https://github.com/labscript-suite/lyse/issues/48): Make analysis_subprocess.py multiprocessing-friendly
+  * [lyse PR #62](http://bitbucket-archive.labscriptsuite.org/#!/labscript_suite/lyse/pull-requests/62): Terminate subprocesses at shutdown
+  * [runmanager PR #37](http://bitbucket-archive.labscriptsuite.org/#!/labscript_suite/runmanager/pull-requests/37): Basic remote control of runmanager
+  * [runmanager PR #39](http://bitbucket-archive.labscriptsuite.org/#!/labscript_suite/runmanager/pull-requests/39): Bugfix of above
+  * [labscript_utils PR #78](http://bitbucket-archive.labscriptsuite.org/#!/labscript_suite/labscript_utils/pull-requests/78): Basic remote control of runmanager): Import pywin32 at module-level rather than lazily
+  * [labscript PR #81](http://bitbucket-archive.labscriptsuite.org/#!/labscript_suite/labscript/pull-requests/81): Basic remote control of runmanager): Include all package dirs in Modulewatcher whitelist
 
 M-LOOP was written by Michael Hush and is maintained by [M-LOOP contributors](https://m-loop.readthedocs.io/en/latest/contributing.html#contributors).
 
-### Future improvements 
 
-* Sequence attributes that record the optimisation details.
-   
+### Future improvements
+
+  * Sequence attributes that record the optimisation details.
+
+
 ### Contributing
 
 If you are an existing _labscript suite_ user, please test this out on your experiment! Report bugs, request new functionality, and submit pull requests using the GitHub page for this repository.

@@ -1,11 +1,10 @@
 import os
-import sys
 import json
 import configparser
 
 
 def get(config_path=None):
-    """Creates config file from specified file, or 
+    """Creates config file from specified file, or
     creates one locally with default values.
     """
 
@@ -58,7 +57,8 @@ def get(config_path=None):
         config["MLOOP"]["no_delay"] = 'false'
         # Display visualisations
         config["MLOOP"]["visualisations"] = 'false'
-        # Type of learner to use in optimisation: [gaussian_process, random, nelder_mead]
+        # Type of learner to use in optimisation:
+        #   [gaussian_process, random, nelder_mead]
         config["MLOOP"]["controller_type"] = '"gaussian_process"'
         # Mute output from MLOOP optimiser
         config["MLOOP"]["console_log_level"] = '"NOTSET"'
@@ -90,7 +90,9 @@ def get(config_path=None):
     params["max_boundary"] = [param["max"] for param in params["mloop_params"].values()]
 
     # starting point for search space, default to half point if not defined
-    params["first_params"] = [param["start"] for param in params["mloop_params"].values()]
+    params["first_params"] = [
+        param["start"] for param in params["mloop_params"].values()
+    ]
 
     return params
 

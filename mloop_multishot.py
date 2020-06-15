@@ -1,6 +1,5 @@
 import lyse
 import numpy as np
-import os
 import mloop_config
 
 try:
@@ -32,7 +31,6 @@ def cost_analysis(cost_key=(None,), maximize=True, x=None):
 
     # Retrieve cost from specified column
     if len(df) and cost_key in df:
-        shot_file = os.path.split(df['filepath'].iloc[ix])[-1]
         cost = (df[cost_key].astype(float).values)[ix]
         if np.isnan(cost) or np.isinf(cost):
             cost_dict['bad'] = True
@@ -45,13 +43,12 @@ def cost_analysis(cost_key=(None,), maximize=True, x=None):
     # If it doesn't exist, generate a fake cost
     elif x is not None:
         from fake_result import fake_result
+
         cost_dict['cost'] = (1 - 2 * maximize) * fake_result(x)
-        shot_file = '<fake_cost>'
 
     # Or just use a constant cost (for debugging)
     else:
         cost_dict['cost'] = 1.2
-        shot_file = '<constant_cost>'
 
     return cost_dict
 
@@ -81,6 +78,9 @@ if __name__ == '__main__':
         print('(Re)starting optimisation process...')
         import threading
         import mloop_interface
-        lyse.routine_storage.optimisation = threading.Thread(target=mloop_interface.main)
+
+        lyse.routine_storage.optimisation = threading.Thread(
+            target=mloop_interface.main
+        )
         lyse.routine_storage.optimisation.daemon = True
         lyse.routine_storage.optimisation.start()
