@@ -1,6 +1,15 @@
-## Description
+<img src="analysislib-mloop-logo.png" height="64" alt="analysislib-mloop" align="right">
 
-This repository implements machine-learning online optimisation of [_labscript suite_](http://labscriptsuite.org) controlled experiments using [M-LOOP](https://m-loop.readthedocs.io).
+# the _labscript suite_ » analysislib-mloop
+
+### Machine-learning online optimisation of 𝘭𝘢𝘣𝘴𝘤𝘳𝘪𝘱𝘵 𝘴𝘶𝘪𝘵𝘦 controlled experiments
+
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
+[![GitHub](https://img.shields.io/github/license/rpanderson/analysislib-mloop)](https://github.com/rpanderson/analysislib-mloop/raw/master/LICENSE)
+[![python: 3.6 | 3.7 | 3.8](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](https://python.org)
+
+**analysislib-mloop** implements machine-learning online optimisation of [_labscript suite_](http://labscriptsuite.org) controlled experiments using [M-LOOP](https://m-loop.readthedocs.io).
+
 
 ## Requirements
 
@@ -9,6 +18,14 @@ This repository implements machine-learning online optimisation of [_labscript s
 * [labscript_utils](https://github.com/labscript-suite/labscript_utils) 2.12.4
 * [zprocess](https://pypi.org/project/zprocess) 2.13.2
 * [M-LOOP](https://m-loop.readthedocs.io/en/latest/install.html) 2.2.0+
+
+
+## Installation
+
+The following assumes you have a working installation of the [_labscript suite_](https://docs.labscriptsuite.org/en/latest/installation) and [M-LOOP](https://m-loop.readthedocs.io/en/latest/install.html). Please see the installation documentation of these projects if you don't.
+
+Clone this repository in your _labscript suite_ analysislib directory. By default, this is `~/labscript-suite/userlib/analysislib` (`~` is `%USERPROFILE%` on Windows).
+
 
 ## Usage
 
@@ -110,7 +127,6 @@ run.save_result(name='y', value=your_result if your_condition else np.nan)
 
 Since cost evaluation can be based on one or more shots from one or more sequences, additional information is required to analyse a single M-LOOP optimisation session in lyse. Per-shot cost evaluation (e.g. of a single-shot analysis result) results in a single-shot sequence per M-LOOP iteration. For multi-shot cost evaluation, a single M-LOOP iteration might correspond to a single multi-shot sequence, repeated execution of the same shot (same `sequence_index` and `run number`, different `run repeat`), or something else. To keep track of this, we intend to add details of the optimisation session to the sequence attributes (written to each shot file). For the time being, you can keep track of the `mloop_session` and `mloop_iteration` by creating globals with these names in any active group in runmanager. They will be updated during each optimisation, and reset to `None` following the completion of an M-LOOP session. This then permits you to analyse shots from a particular optimisation session as follows:
 
-
 ```python
 import lyse
 
@@ -172,7 +188,7 @@ The `LoopInterface` subclass (of `mloop.interface.Interface`) has a method `get_
   * requests the next experiment shot(s) be compiled and run using `runmanager.remote.set_global()` and `runmanager.remote.engage()`, and
   * waits for the next cost using a blocking call to `lyse.routine_storage.queue.get()`.
 
-The main method of `mloop_interface.py` follows the trend of the [M-LOOP >> Python controlled experiment tutorial](https://m-loop.readthedocs.io/en/latest/tutorials.html#python-controlled-experiment):
+The main method of `mloop_interface.py` follows the trend of the [M-LOOP » Python controlled experiment tutorial](https://m-loop.readthedocs.io/en/latest/tutorials.html#python-controlled-experiment):
 
   * Instantiate `LoopInterface`, an M-LOOP optmiser interface.
   * Get the current configuration.
@@ -203,11 +219,13 @@ M-LOOP was written by Michael Hush and is maintained by [M-LOOP contributors](ht
 
 ### Future improvements
 
+  * Validation and error checks (#1).
   * Sequence attributes that record the optimisation details.
+  * Generalise this implementation to other algorithmic optimisaiton libraries.
 
 
 ### Contributing
 
-If you are an existing _labscript suite_ user, please test this out on your experiment! Report bugs, request new functionality, and submit pull requests using the GitHub page for this repository.
+If you are an existing _labscript suite_ user, please test this out on your experiment! Report bugs, request new functionality, and submit pull requests using the [issue tracker](https://github.com/rpanderson/analysislib-mloop/issues) for this project.
 
 If you'd like to implement machine-learning online optimisation on your shot-based, hardware-timed experiment, please consider deploying the _labscript suite_ and M-LOOP (or another machine learning library, by adapting this extension).
