@@ -25,8 +25,8 @@ class LoopInterface(Interface):
         # Retrieve configuration from file or generate from defaults
         self.config = mloop_config.get()
 
-        # Pass config arguments to parent class's __init__() so that any logging
-        # options are applied appropriately.
+        # Pass config arguments to parent class's __init__() so that any
+        # relevant specified options are applied appropriately.
         super(LoopInterface, self).__init__(**self.config)
 
         self.num_in_costs = 0
