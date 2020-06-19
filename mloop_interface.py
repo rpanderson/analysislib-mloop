@@ -22,10 +22,13 @@ def set_globals_mloop(mloop_session=None, mloop_iteration=None):
 
 class LoopInterface(Interface):
     def __init__(self):
-        super(LoopInterface, self).__init__()
-
         # Retrieve configuration from file or generate from defaults
         self.config = mloop_config.get()
+
+        # Pass config arguments to parent class's __init__() so that any
+        # relevant specified options are applied appropriately.
+        super(LoopInterface, self).__init__(**self.config)
+
         self.num_in_costs = 0
 
     # Method called by M-LOOP upon each new iteration to determine the cost
