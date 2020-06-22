@@ -83,6 +83,10 @@ def get(config_path=None):
     # store number of parameters for passing to controller interface
     params["num_params"] = len(params["mloop_params"])
 
+    # get the names of the parameters, if not explicitly specified by user
+    if "param_names" not in params:
+        params["param_names"] = list(params["mloop_params"].keys())
+
     # get min boundaries for specified variables
     params["min_boundary"] = [param["min"] for param in params["mloop_params"].values()]
 
