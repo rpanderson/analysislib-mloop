@@ -25,11 +25,11 @@ def check_runmanager(config):
     n_shots = rm.n_shots()
     if n_shots > 1 and not config['ignore_bad']:
         msgs.append(
-            f'runmanager set to compile {n_shots:d} shots per request, but your '
+            f'runmanager is set to compile {n_shots:d} shots per request, but your '
             + 'mloop_config has ignore_bad = False. You are advised to (i) remove '
-            + 'iterable globals so as to compile one shot per cost; or set ignore_bad '
-            + '= True in your mloop_config and only return one cost with bad = False '
-            + 'per sequence.'
+            + 'iterable globals so as to compile one shot per cost or (ii) set '
+            + 'ignore_bad = True in your mloop_config and only return one cost with '
+            + 'bad = False per sequence.'
         )
     if len(msgs) > 1:
         print('\n'.join(msgs))
