@@ -3,7 +3,6 @@ from runmanager.remote import set_globals, engage
 import mloop_config
 from mloop.interfaces import Interface
 from mloop.controllers import create_controller
-from mloop_multishot import check_runmanager
 
 
 def set_globals_mloop(mloop_session=None, mloop_iteration=None):
@@ -40,12 +39,6 @@ class LoopInterface(Interface):
         # or so mloop_multishot.py can fake a cost if mock = True
         lyse.routine_storage.params = params_dict['params']
 
-        if not check_runmanager(self.config):
-            print(
-                'Error in runmanager (above).',
-                'Please remedy above before submitting next shot to lyse.',
-            )
-            return {'cost': None}
         if not self.config['mock']:
             print('Requesting next shot from experiment interface...')
             globals_dict = dict(zip(self.config['mloop_params'], params_dict['params']))

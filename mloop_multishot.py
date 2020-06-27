@@ -121,11 +121,12 @@ if __name__ == '__main__':
             maximize=config['maximize'],
             x=lyse.routine_storage.params[0] if config['mock'] else None,
         )
-        if (not cost_dict['bad'] or not config['ignore_bad']) and verify_globals(
-            config
+        if (
+            (not cost_dict['bad'] or not config['ignore_bad']) and
+            check_runmanager(config) and
+            verify_globals(config)
         ):
             lyse.routine_storage.queue.put(cost_dict)
-        check_runmanager(config)
     elif check_runmanager(config):
         print('(Re)starting optimisation process...')
         import threading
