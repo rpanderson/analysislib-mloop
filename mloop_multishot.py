@@ -29,7 +29,7 @@ def check_runmanager(config):
             + 'mloop_config has ignore_bad = False. You are advised to (i) remove '
             + 'iterable globals so as to compile one shot per cost; or set ignore_bad '
             + '= True in your mloop_config and only return one cost with bad = False '
-            + ' per sequence.'
+            + 'per sequence.'
         )
     if len(msgs) > 1:
         print('\n'.join(msgs))
@@ -53,11 +53,11 @@ def verify_globals(config):
     shot_values = [shot_globals[name] for name in config['mloop_params']]
 
     # Verify integrity by cross-checking against what was requested
-    if current_values != requested_values:
+    if not np.array_equal(current_values, requested_values):
         print('Cost requested for different values to those in runmanager.')
         print('Please add an executed shot to lyse with: ', requested_dict)
         return False
-    if shot_values != requested_values:
+    if not np.array_equal(shot_values, requested_values):
         print('Cost requested for different values to those used to compute cost.')
         print('Please add an executed shot to lyse with: ', requested_dict)
         return False
@@ -124,7 +124,7 @@ if __name__ == '__main__':
             maximize=config['maximize'],
             x=lyse.routine_storage.params[0] if config['mock'] else None,
         )
-        if verify_globals(config) and (not cost_dict['bad'] or not config['ignore_bad']):
+        if (not cost_dict['bad'] or not config['ignore_bad']) and verify_globals(config):
             lyse.routine_storage.queue.put(cost_dict)
         check_runmanager(config)
     elif check_runmanager(config):
