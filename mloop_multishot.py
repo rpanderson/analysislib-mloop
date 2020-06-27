@@ -47,10 +47,7 @@ def verify_globals(config):
 
     # Get the parameter values for the shot we just computed the cost for
     df = lyse.data()
-    ix = -1
-    run = lyse.Run(df['filepath'].iloc[ix])
-    shot_globals = run.get_globals()
-    shot_values = [shot_globals[name] for name in config['mloop_params']]
+    shot_values = [df[name].iloc[-1] for name in config['mloop_params']]
 
     # Verify integrity by cross-checking against what was requested
     if not np.array_equal(current_values, requested_values):
@@ -124,7 +121,9 @@ if __name__ == '__main__':
             maximize=config['maximize'],
             x=lyse.routine_storage.params[0] if config['mock'] else None,
         )
-        if (not cost_dict['bad'] or not config['ignore_bad']) and verify_globals(config):
+        if (not cost_dict['bad'] or not config['ignore_bad']) and verify_globals(
+            config
+        ):
             lyse.routine_storage.queue.put(cost_dict)
         check_runmanager(config)
     elif check_runmanager(config):
