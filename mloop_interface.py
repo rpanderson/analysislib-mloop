@@ -35,15 +35,16 @@ class LoopInterface(Interface):
     # associated with a given point in the search space
     def get_next_cost_dict(self, params_dict):
         self.num_in_costs += 1
+        # Store current parameters to later verify reported cost corresponds to these
+        # or so mloop_multishot.py can fake a cost if mock = True
+        lyse.routine_storage.params = params_dict['params']
+
         if not self.config['mock']:
             print('Requesting next shot from experiment interface...')
             globals_dict = dict(zip(self.config['mloop_params'], params_dict['params']))
             set_globals(globals_dict)
             set_globals_mloop(mloop_iteration=self.num_in_costs)
             engage()
-        else:
-            # Store a current parameter so that mloop_multishot.py can fake a cost
-            lyse.routine_storage.x = params_dict['params'][0]
 
         # Only proceed once per execution of the mloop_multishot.py routine
         print('Getting current cost from lyse queue...')
