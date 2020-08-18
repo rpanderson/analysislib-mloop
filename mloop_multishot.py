@@ -28,7 +28,7 @@ def configure_logging(config):
     formatter = logging.Formatter(
         '%(filename)s:%(funcName)s:%(lineno)d:%(levelname)s: %(message)s'
     )
-    
+
     # Set up handlers if not already present from previous runs.
     if not logger.handlers:
         # Set up console handler
@@ -43,27 +43,27 @@ def configure_logging(config):
         file_handler.setLevel(file_log_level)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
-    
+
     logger.debug('Logger configured.')
 
 
 def check_runmanager(config):
     logger.debug('Checking runmanager...')
     msgs = []
-    
+
     logger.debug('Getting globals.')
     rm_globals = rm.get_globals()
     if not all([x in rm_globals for x in config['mloop_params']]):
         msgs.append('Not all optimisation parameters present in runmanager.')
-        
+
     logger.debug('Getting run shots state.')
     if not rm.get_run_shots():
         msgs.append('Run shot(s) not selected in runmanager.')
-    
+
     logger.debug('Checking for errors in globals.')
     if rm.error_in_globals():
         msgs.append('Error in runmanager globals.')
-        
+
     logger.debug('Checking number of shots.')
     n_shots = rm.n_shots()
     if n_shots > 1 and not config['ignore_bad']:
@@ -171,7 +171,7 @@ def cost_analysis(cost_key=(None,), maximize=True, x=None):
 if __name__ == '__main__':
     config = mloop_config.get()
     configure_logging(config)
-    
+
     if not hasattr(lyse.routine_storage, 'queue'):
         logger.info('First execution of lyse routine...')
         try:
@@ -190,25 +190,24 @@ if __name__ == '__main__':
             maximize=config['maximize'],
             x=lyse.routine_storage.params[0] if config['mock'] else None,
         )
-        
-        if (not cost_dict['bad'] or not config['ignore_bad']):
+
+        if not cost_dict['bad'] or not config['ignore_bad']:
             if check_runmanager(config):
                 if verify_globals(config):
                     logger.debug('Putting cost in queue.')
                     lyse.routine_storage.queue.put(cost_dict)
                 else:
-                    message = ('NOT putting cost in queue because verify_globals '
-                               'failed.')
+                    message = 'NOT putting cost in queue because verify_globals failed.'
                     logger.debug(message)
             else:
-                message = ('NOT putting cost in queue because check_runmanager '
-                           'failed.')
+                message = 'NOT putting cost in queue because check_runmanager failed.'
                 logger.debug(message)
         else:
-            message = ('NOT putting cost in queue because cost was bad and ignore_bad '
-                       'is True.')
+            message = (
+                'NOT putting cost in queue because cost was bad and ignore_bad is True.'
+            )
             logger.debug(message)
-            
+
     elif check_runmanager(config):
         logger.info('(Re)starting optimisation process...')
         import threading
