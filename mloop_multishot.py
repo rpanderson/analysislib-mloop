@@ -187,15 +187,25 @@ if __name__ == '__main__':
             maximize=config['maximize'],
             x=lyse.routine_storage.params[0] if config['mock'] else None,
         )
-        if (
-            (not cost_dict['bad'] or not config['ignore_bad']) and
-            check_runmanager(config) and
-            verify_globals(config)
-        ):
-            logger.debug('Putting cost in queue.')
-            lyse.routine_storage.queue.put(cost_dict)
+        
+        if (not cost_dict['bad'] or not config['ignore_bad']):
+            if check_runmanager(config):
+                if verify_globals(config):
+                    logger.debug('Putting cost in queue.')
+                    lyse.routine_storage.queue.put(cost_dict)
+                else:
+                    message = ('NOT putting cost in queue because verify_globals '
+                               'failed.')
+                    logger.debug(message)
+            else:
+                message = ('NOT putting cost in queue because check_runmanager '
+                           'failed.')
+                logger.debug(message)
         else:
-            logger.debug('NOT putting cost in queue.')
+            message = ('NOT putting cost in queue because cost was bad and ignore_bad '
+                       'is True.')
+            logger.debug(message)
+            
     elif check_runmanager(config):
         logger.info('(Re)starting optimisation process...')
         import threading
