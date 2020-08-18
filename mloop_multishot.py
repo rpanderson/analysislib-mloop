@@ -4,6 +4,8 @@ import numpy as np
 import mloop_config
 import sys
 import logging
+import os
+from labscript_utils.setup_logging import LOG_PATH
 
 try:
     from labscript_utils import check_version
@@ -18,7 +20,7 @@ check_version('labscript_utils', '2.12.5', '3.0')
 def configure_logging(config):
     console_log_level = config['analysislib_console_log_level']
     file_log_level = config['analysislib_console_log_level']
-    LOG_FILENAME = 'analysislib_mloop_log.txt'
+    LOG_FILENAME = 'analysislib_mloop.log'
 
     global logger
     logger = logging.getLogger('analysislib_mloop')
@@ -36,7 +38,8 @@ def configure_logging(config):
         logger.addHandler(console_handler)
 
         # Set up file handler
-        file_handler = logging.FileHandler(LOG_FILENAME, mode='w')
+        full_filename = os.path.join(LOG_PATH, LOG_FILENAME)
+        file_handler = logging.FileHandler(full_filename, mode='w')
         file_handler.setLevel(file_log_level)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
