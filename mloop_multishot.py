@@ -2,6 +2,8 @@ import lyse
 import runmanager.remote as rm
 import numpy as np
 import mloop_config
+import sys
+import logging
 
 try:
     from labscript_utils import check_version
@@ -13,15 +15,48 @@ check_version('zprocess', '2.13.1', '3.0')
 check_version('labscript_utils', '2.12.5', '3.0')
 
 
+def configure_logging(console_log_level, file_log_level, log_filename):
+    global logger
+    logger = logging.getLogger('analysislib_mloop')
+    logger.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        '%(filename)s:%(funcName)s:%(lineno)d:%(levelname)s: %(message)s'
+    )
+    # Set up handlers if not already present from previous runs.
+    if not logger.handlers:
+        # Set up console handler
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setLevel(console_log_level)
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
+
+        # Set up file handler
+        file_handler = logging.FileHandler(log_filename, mode='w')
+        file_handler.setLevel(file_log_level)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+    
+    logger.debug('Logger configured.')
+
+
 def check_runmanager(config):
-    msgs = ['WARNING(s):']
+    logger.debug('Checking runmanager...')
+    msgs = []
+    
+    logger.debug('Getting globals.')
     rm_globals = rm.get_globals()
     if not all([x in rm_globals for x in config['mloop_params']]):
         msgs.append('Not all optimisation parameters present in runmanager.')
+        
+    logger.debug('Getting run shots state.')
     if not rm.get_run_shots():
         msgs.append('Run shot(s) not selected in runmanager.')
+    
+    logger.debug('Checking for errors in globals.')
     if rm.error_in_globals():
         msgs.append('Error in runmanager globals.')
+        
+    logger.debug('Checking number of shots.')
     n_shots = rm.n_shots()
     if n_shots > 1 and not config['ignore_bad']:
         msgs.append(
@@ -31,33 +66,49 @@ def check_runmanager(config):
             + 'ignore_bad = True in your mloop_config and only return one cost with '
             + 'bad = False per sequence.'
         )
-    if len(msgs) > 1:
-        print('\n'.join(msgs))
-    return len(msgs) <= 1
+
+    if msgs:
+        logger.warning('\n'.join(msgs))
+        return False
+    else:
+        logger.debug('Runmanager ok.')
+        return True
 
 
 def verify_globals(config):
+    logger.debug('Verifying globals...')
+
     # Get the current runmanager globals
+    logger.debug('Getting values of globals from runmanager.')
     rm_globals = rm.get_globals()
     current_values = [rm_globals[name] for name in config['mloop_params']]
 
     # Retrieve the parameter values requested by M-LOOP on this iteration
+    logger.debug('Getting requested globals values from lyse.routine_storage.')
     requested_values = lyse.routine_storage.params
     requested_dict = dict(zip(config['mloop_params'], requested_values))
 
     # Get the parameter values for the shot we just computed the cost for
+    logger.debug('Getting lyse dataframe.')
     df = lyse.data()
     shot_values = [df[name].iloc[-1] for name in config['mloop_params']]
 
     # Verify integrity by cross-checking against what was requested
     if not np.array_equal(current_values, requested_values):
-        print('Cost requested for different values to those in runmanager.')
-        print('Please add an executed shot to lyse with: ', requested_dict)
+        message = (
+            'Cost requested for values different to those in runmanager.\n'
+            'Please add an executed shot to lyse with: {requested_dict}'
+        ).format(requested_dict=requested_dict)
+        logger.error(message)
         return False
     if not np.array_equal(shot_values, requested_values):
-        print('Cost requested for different values to those used to compute cost.')
-        print('Please add an executed shot to lyse with: ', requested_dict)
+        message = (
+            'Cost requested for different values to those used to compute cost.\n'
+            'Please add an executed shot to lyse with: {requested_dict}'
+        ).format(requested_dict=requested_dict)
+        logger.error(message)
         return False
+    logger.debug('Globals verified.')
     return True
 
 
@@ -70,9 +121,11 @@ def cost_analysis(cost_key=(None,), maximize=True, x=None):
     - Negate value in DataFrame if maximize = True.
     - Fallback to reporting a constant or fake cost (from x).
     """
+    logger.debug('Getting cost...')
     cost_dict = {'bad': False}
 
     # Retrieve current lyse DataFrame
+    logger.debug('Getting lyse dataframe.')
     df = lyse.data()
 
     # Use the most recent shot
@@ -83,34 +136,47 @@ def cost_analysis(cost_key=(None,), maximize=True, x=None):
         cost = (df[cost_key].astype(float).values)[ix]
         if np.isnan(cost) or np.isinf(cost):
             cost_dict['bad'] = True
+            logger.info('Got bad cost: {cost}'.format(cost=cost))
         else:
             cost_dict['cost'] = (1 - 2 * maximize) * cost
+            logger.info('Got cost: {cost}'.format(cost=cost_dict['cost']))
         u_cost_key = cost_key[:-1] + ('u_' + cost_key[-1],)
         if u_cost_key in df:
             cost_dict['uncer'] = df[u_cost_key].iloc[ix]
+            logger.info('Got uncertainty: {uncer}'.format(uncer=cost_dict['uncer']))
 
     # If it doesn't exist, generate a fake cost
     elif x is not None:
         from fake_result import fake_result
 
         cost_dict['cost'] = (1 - 2 * maximize) * fake_result(x)
+        logger.info('Faked cost: {cost}'.format(cost=cost_dict['cost']))
 
     # Or just use a constant cost (for debugging)
     else:
         cost_dict['cost'] = 1.2
+        logger.info('Faked constant cost: {cost}'.format(cost=cost_dict['cost']))
 
     return cost_dict
 
 
 if __name__ == '__main__':
     config = mloop_config.get()
+    
+    # TODO: Get these from config file.
+    console_log_level = logging.INFO
+    file_log_level = logging.DEBUG
+    log_filename = 'analysislib_mloop_log.txt'
+    configure_logging(console_log_level, file_log_level, log_filename)
+    
     if not hasattr(lyse.routine_storage, 'queue'):
-        print('First execution of lyse routine...')
+        logger.info('First execution of lyse routine...')
         try:
             from queue import Queue
         except ImportError:
             # PY2
             from Queue import Queue
+        logger.debug('Creating queue.')
         lyse.routine_storage.queue = Queue()
     if (
         hasattr(lyse.routine_storage, 'optimisation')
@@ -126,17 +192,22 @@ if __name__ == '__main__':
             check_runmanager(config) and
             verify_globals(config)
         ):
+            logger.debug('Putting cost in queue.')
             lyse.routine_storage.queue.put(cost_dict)
+        else:
+            logger.debug('NOT putting cost in queue.')
     elif check_runmanager(config):
-        print('(Re)starting optimisation process...')
+        logger.info('(Re)starting optimisation process...')
         import threading
         import mloop_interface
 
+        logger.debug('Starting interface thread...')
         lyse.routine_storage.optimisation = threading.Thread(
             target=mloop_interface.main
         )
         lyse.routine_storage.optimisation.daemon = True
         lyse.routine_storage.optimisation.start()
+        logger.debug('Interface thread started.')
     else:
         print(
             '\nNot (re)starting optimisation process.',
