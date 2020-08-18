@@ -15,13 +15,18 @@ check_version('zprocess', '2.13.1', '3.0')
 check_version('labscript_utils', '2.12.5', '3.0')
 
 
-def configure_logging(console_log_level, file_log_level, log_filename):
+def configure_logging(config):
+    console_log_level = config['analysislib_console_log_level']
+    file_log_level = config['analysislib_console_log_level']
+    LOG_FILENAME = 'analysislib_mloop_log.txt'
+
     global logger
     logger = logging.getLogger('analysislib_mloop')
     logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
         '%(filename)s:%(funcName)s:%(lineno)d:%(levelname)s: %(message)s'
     )
+    
     # Set up handlers if not already present from previous runs.
     if not logger.handlers:
         # Set up console handler
@@ -31,7 +36,7 @@ def configure_logging(console_log_level, file_log_level, log_filename):
         logger.addHandler(console_handler)
 
         # Set up file handler
-        file_handler = logging.FileHandler(log_filename, mode='w')
+        file_handler = logging.FileHandler(LOG_FILENAME, mode='w')
         file_handler.setLevel(file_log_level)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
@@ -162,12 +167,7 @@ def cost_analysis(cost_key=(None,), maximize=True, x=None):
 
 if __name__ == '__main__':
     config = mloop_config.get()
-    
-    # TODO: Get these from config file.
-    console_log_level = logging.INFO
-    file_log_level = logging.DEBUG
-    log_filename = 'analysislib_mloop_log.txt'
-    configure_logging(console_log_level, file_log_level, log_filename)
+    configure_logging(config)
     
     if not hasattr(lyse.routine_storage, 'queue'):
         logger.info('First execution of lyse routine...')
