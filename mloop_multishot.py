@@ -19,7 +19,7 @@ check_version('labscript_utils', '2.12.5', '3.0')
 
 def configure_logging(config):
     console_log_level = config['analysislib_console_log_level']
-    file_log_level = config['analysislib_console_log_level']
+    file_log_level = config['analysislib_file_log_level']
     LOG_FILENAME = 'analysislib_mloop.log'
 
     global logger
