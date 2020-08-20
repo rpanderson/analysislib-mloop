@@ -3,6 +3,10 @@ from runmanager.remote import set_globals, engage
 import mloop_config
 from mloop.interfaces import Interface
 from mloop.controllers import create_controller
+import logging
+
+
+logger = logging.getLogger('analysislib_mloop')
 
 
 def set_globals_mloop(mloop_session=None, mloop_iteration=None):
@@ -16,8 +20,9 @@ def set_globals_mloop(mloop_session=None, mloop_iteration=None):
         globals = {'mloop_session': mloop_session, 'mloop_iteration': mloop_iteration}
     try:
         set_globals(globals)
+        logger.debug('mloop_iteration and/or mloop_session set.')
     except ValueError:
-        pass
+        logger.debug('Failed to set mloop_iteration and/or mloop_session.')
 
 
 class LoopInterface(Interface):
@@ -37,18 +42,24 @@ class LoopInterface(Interface):
         self.num_in_costs += 1
         # Store current parameters to later verify reported cost corresponds to these
         # or so mloop_multishot.py can fake a cost if mock = True
+        logger.debug('Storing requested parameters in lyse.routine_storage.')
         lyse.routine_storage.params = params_dict['params']
 
         if not self.config['mock']:
-            print('Requesting next shot from experiment interface...')
+            logger.info('Requesting next shot from experiment interface...')
             globals_dict = dict(zip(self.config['mloop_params'], params_dict['params']))
+            logger.debug('Setting optimization parameter values.')
             set_globals(globals_dict)
+            logger.debug('Setting mloop_iteration...')
             set_globals_mloop(mloop_iteration=self.num_in_costs)
+            logger.debug('Calling engage().')
             engage()
 
         # Only proceed once per execution of the mloop_multishot.py routine
-        print('Getting current cost from lyse queue...')
-        return lyse.routine_storage.queue.get()
+        logger.info('Waiting for next cost from lyse queue...')
+        cost_dict = lyse.routine_storage.queue.get()
+        logger.debug('Got cost_dict from lyse queue: {cost}'.format(cost=cost_dict))
+        return cost_dict
 
 
 def main():
@@ -66,11 +77,11 @@ def main():
     controller.optimize()
 
     # Reset the M-LOOP session and index to None
-    print('Optimisation ended.')
+    logger.info('Optimisation ended.')
     set_globals_mloop()
 
     # Set the optimisation globals to their best results
-    print('Setting best parameters in runmanager.')
+    logger.info('Setting best parameters in runmanager.')
     globals_dict = dict(zip(interface.config['mloop_params'], controller.best_params))
     set_globals(globals_dict)
 

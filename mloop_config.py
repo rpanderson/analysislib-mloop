@@ -1,6 +1,7 @@
 import os
 import json
 import configparser
+import logging
 
 
 def get(config_path=None):
@@ -36,6 +37,12 @@ def get(config_path=None):
         config["ANALYSIS"]["maximize"] = 'true'
         # Don't report to M-LOOP if a shot is deemed bad
         config["ANALYSIS"]["ignore_bad"] = 'true'
+        # Control log level for logging to console from analysislib-mloop. Not to be
+        # confused with MLOOP's console_log_level option for its logger.
+        config["ANALYSIS"]["analysislib_console_log_level"] = '"INFO"'
+        # Control log level for logging to file from analysislib-mloop. Not to be
+        # confused with MLOOP's file_log_level option for its logger.
+        config["ANALYSIS"]["analysislib_file_log_level"] = '"DEBUG"'
 
         # M-LOOP parameters
         config["MLOOP"] = {}
