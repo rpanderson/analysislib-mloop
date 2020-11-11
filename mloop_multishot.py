@@ -46,7 +46,7 @@ def verify_globals(config):
     requested_dict = dict(zip(config['mloop_params'], requested_values))
 
     # Get the parameter values for the shot we just computed the cost for
-    df = lyse.data()
+    df = _get_dataframe()
     shot_values = [df[name].iloc[-1] for name in config['mloop_params']]
 
     # Verify integrity by cross-checking against what was requested
@@ -61,6 +61,17 @@ def verify_globals(config):
     return True
 
 
+def _get_dataframe():
+    """Get the lyse dataframe, using n_sequences if lyse supports it."""
+    try:
+        df = lyse.data(n_sequences=1)
+    except (TypeError, ValueError):
+        # TypeError is raised if client's lyse doesn't support n_sequences and
+        # ValueError is raised if server's lyse doesn't support n_sequences.
+        df = lyse.data()
+    return df
+
+
 def cost_analysis(cost_key=(None,), maximize=True, x=None):
     """Return a cost dictionary to M-LOOP with at least:
       {'bad': True} or {'cost': float}.
@@ -73,7 +84,7 @@ def cost_analysis(cost_key=(None,), maximize=True, x=None):
     cost_dict = {'bad': False}
 
     # Retrieve current lyse DataFrame
-    df = lyse.data()
+    df = _get_dataframe()
 
     # Use the most recent shot
     ix = -1
