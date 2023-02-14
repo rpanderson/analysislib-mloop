@@ -53,7 +53,7 @@ def check_runmanager(config):
 
     logger.debug('Getting globals.')
     rm_globals = rm.get_globals()
-    if not all([x in rm_globals for x in config['mloop_params']]):
+    if not all([x.name in rm_globals for x in config['runmanager_globals']]):
         msgs.append('Not all optimisation parameters present in runmanager.')
 
     logger.debug('Getting run shots state.')
@@ -89,17 +89,22 @@ def verify_globals(config):
     # Get the current runmanager globals
     logger.debug('Getting values of globals from runmanager.')
     rm_globals = rm.get_globals()
-    current_values = [rm_globals[name] for name in config['mloop_params']]
+    current_values = [rm_globals[g.name] for g in config['runmanager_globals']]
 
     # Retrieve the parameter values requested by M-LOOP on this iteration
     logger.debug('Getting requested globals values from lyse.routine_storage.')
-    requested_values = lyse.routine_storage.params
-    requested_dict = dict(zip(config['mloop_params'], requested_values))
+    requested_dict = lyse.routine_storage.params
+    print('requested_dict', requested_dict)
+
+    requested_values = [requested_dict[g.name] for g in config['runmanager_globals']]
+
+    print('requested_values', requested_values)
+    print('current_values', current_values)
 
     # Get the parameter values for the shot we just computed the cost for
     logger.debug('Getting lyse dataframe.')
     df = lyse.data()
-    shot_values = [df[name].iloc[-1] for name in config['mloop_params']]
+    shot_values = [df[g.name].iloc[-1] for g in config['runmanager_globals']]
 
     # Verify integrity by cross-checking against what was requested
     if not np.array_equal(current_values, requested_values):
@@ -188,7 +193,7 @@ if __name__ == '__main__':
         cost_dict = cost_analysis(
             cost_key=config['cost_key'] if not config['mock'] else [],
             maximize=config['maximize'],
-            x=lyse.routine_storage.params[0] if config['mock'] else None,
+            x=lyse.routine_storage.params.values()[0] if config['mock'] else None,
         )
 
         if not cost_dict['bad'] or not config['ignore_bad']:

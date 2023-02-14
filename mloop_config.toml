@@ -1,0 +1,48 @@
+[COMPILATION]
+mock = false
+
+[ANALYSIS]
+cost_key = ["fake_result_multishot", "y"]
+maximize = true
+ignore_bad = false
+ignore_bad = true
+analysislib_console_log_level = 20
+analysislib_file_log_level = 10
+
+[MLOOP]
+num_training_runs = 5
+max_num_runs_without_better_params = 10
+max_num_runs = 30
+trust_region = 0.05
+cost_has_noise = true
+no_delay = false
+visualisations = false
+controller_type = "gaussian_process"
+console_log_level = 0
+
+# Automatically creates the mapping to a Runmanager global
+[MLOOP_PARAMS.x]
+global_name = "x"  # << Specify the Runmanager global it maps to
+min = -5.0
+max = 5.0
+start = -2
+
+# The mapping automatically created above by defining global_name is equivalent to
+# [RUNMANAGER_GLOBALS.x]
+# expr = "lambda m: m"
+# args = ["x"]
+
+# Create a MLOOP parameter but define its mapping to Runmanager globals later
+[MLOOP_PARAMS.y]
+min = -5.0
+max = 5.0
+start = -2
+
+[MLOOP_PARAMS.z]
+min = -5.0
+max = 5.0
+start = -2
+
+[RUNMANAGER_GLOBALS.test_tuple]
+expr = "lambda m, n: (m, n)"
+args = ["y", "z"]

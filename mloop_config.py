@@ -1,29 +1,75 @@
 import os
 import json
 import configparser
+import tomli
 import logging
+from collections import namedtuple
 
 
-def get(config_path=None):
+MloopParam = namedtuple("MloopParam", ["name", "min", "max", "start"])
+RunmanagerGlobal = namedtuple("RunmanagerGlobal", ["name", "expr", "args"])
+
+
+def prepare_globals(global_list, params_val_dict):
+    globals_to_set = {}
+    for g in global_list:
+        target = g.name
+        args = [ params_val_dict[arg] for arg in g.args ]
+
+        assert args
+
+        if g.expr:
+            val = eval(g.expr)(*args)
+        else:
+            val = args[0]
+
+        globals_to_set[target] = val
+
+    return globals_to_set
+
+
+def get(config_paths=None):
     """Creates config file from specified file, or
     creates one locally with default values.
     """
 
     # Default to local directory and default name
-    if not config_path:
+    if not config_paths:
+        config_paths = []
         folder = os.path.dirname(__file__)
-        config_path = os.path.join(folder, "mloop_config.ini")
+        config_paths.append(os.path.join(folder, "mloop_config.toml"))
+        config_paths.append(os.path.join(folder, "mloop_config.ini"))
 
-    # Instantiate RawConfigParser with case sensitive option names
-    config = configparser.RawConfigParser()
-    config.optionxform = str
+    config_path = ""
+    for path in config_paths:
+        if os.path.isfile(path):
+            print(path)
+            config_path = path
+            break
 
-    # Check if file exists and initialise with defaults if it does not
-    if os.path.isfile(config_path):
-        # Retrieve configuration parameters
-        config.read(config_path)
+    config = None
+    config_type = None
+    if config_path:
+        if config_path.lower().endswith(".ini"):
+            config_type = "ini"
+            config.read(config_path)
+
+            # Instantiate RawConfigParser with case sensitive option names
+            config = configparser.RawConfigParser()
+            config.optionxform = str
+
+            # Retrieve configuration parameters
+            config.read(config_path)
+        elif config_path.lower().endswith(".toml"):
+            config_type = "toml"
+            with open(config_path, "rb") as f:
+                config = tomli.load(f)
+        else:
+            raise TypeError("Unknown configuration file type. Supports only .ini or .toml.")
+
     else:
         print("--- Configuration file not found: generating with default values ---")
+        config_type = "ini"
 
         # Shot compilation parameters
         config["COMPILATION"] = {}
@@ -75,36 +121,90 @@ def get(config_path=None):
         with open(os.path.join(folder, "mloop_config.ini"), "w+") as f:
             config.write(f)
 
+    to_flatten = ["COMPILATION", "ANALYSIS", "MLOOP"]
     # iterate over configuration object and store pairs in parameter dictionary
     params = {}
-    for sect in config.sections():
-        for (key, val) in config.items(sect):
-            try:
-                params[key] = json.loads(val)
-            except json.JSONDecodeError:
+    for sect in to_flatten:
+        for (key, val) in config[sect].items():
+            # only parse json in ini file, not in toml file
+            if config_type == "ini":
+                try:
+                    params[key] = json.loads(val)
+                except json.JSONDecodeError:
+                    params[key] = val
+            else:
                 params[key] = val
 
     # Convert cost_key to tuple
     params["cost_key"] = tuple(params["cost_key"])
 
-    # store number of parameters for passing to controller interface
-    params["num_params"] = len(params["mloop_params"])
+    param_dict = {}
+    global_list = []
 
-    # get the names of the parameters, if not explicitly specified by user
-    if "param_names" not in params:
-        params["param_names"] = list(params["mloop_params"].keys())
+    if config_type == "ini":
+        for name, param in config["MLOOP"]["mloop_params"].items():
+            param_dict[name] = \
+                    MloopParam(
+                            name=name,
+                            min=param["min"],
+                            max=param["max"],
+                            start=param["start"]
+                            )
+            global_list.append(RunmanagerGlobal(
+                            name=param["global_name"],
+                            expr=None,
+                            args=[name]
+                            )
+                )
 
-    # get min boundaries for specified variables
-    params["min_boundary"] = [param["min"] for param in params["mloop_params"].values()]
+    elif config_type == "toml":
+        for name, param in config["MLOOP_PARAMS"].items():
+            param_dict[name] = \
+                    MloopParam(
+                            name=name,
+                            min=param["min"],
+                            max=param["max"],
+                            start=param["start"]
+                            )
 
-    # get max boundaries for specified variables
-    params["max_boundary"] = [param["max"] for param in params["mloop_params"].values()]
+            if "global_name" in param:
+                global_list.append(RunmanagerGlobal(
+                                name=param["global_name"],
+                                expr=None,
+                                args=[name]
+                                )
+                )
 
-    # starting point for search space, default to half point if not defined
-    params["first_params"] = [
-        param["start"] for param in params["mloop_params"].values()
-    ]
+        if "RUNMANAGER_GLOBALS" in config:
+            for name, param in config["RUNMANAGER_GLOBALS"].items():
+                global_list.append(RunmanagerGlobal(
+                                name=name,
+                                expr=param.get('expr', None),
+                                args=param['args']
+                                )
+                )
 
+        # check if all mloop params can be mapped to at least one global
+        for ml_name in param_dict.keys():
+            if not any([ (ml_name in g.args) for g in global_list ]):
+                raise KeyError(f"Parameter {ml_name} in MLOOP_PARAMS doesn't have a Runmanager global mapped to it.")
+
+        # check if all args of any global has been defined in mloop params
+        for g in global_list:
+            for a in g.args:
+                if a not in param_dict:
+                    raise KeyError(f"Argument {a} of global {g.name} doesn't exist.")
+
+        params['mloop_params'] = param_dict
+        params['runmanager_globals'] = global_list
+
+        params['num_params'] = len(params['mloop_params'].values())
+        params['min_boundary'] = [p.min for p in params['mloop_params'].values()]
+        params['max_boundary'] = [p.max for p in params['mloop_params'].values()]
+        params['first_params'] = [p.start for p in params['mloop_params'].values()]
+        
+
+        
     return params
 
 
