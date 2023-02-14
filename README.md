@@ -41,20 +41,46 @@ runmanager = localhost
 runmanager = 42523
 ```
 
-2. **Configure optimisation settings in `mloop_config.ini`.** There is a tracked version of this file in the repository. At a bare minimum, you should modify the following:
+2. **Configure optimisation settings in `mloop_config.toml`.** TOML is a high-level configuration file format and its description can be found [here](https://toml.io/). There is a tracked version of this file in the repository. At a bare minimum, you should modify the following:
 
-```ini
+```toml
 [ANALYSIS]
 cost_key = ["fake_result", "y"]
 maximize = true
 
-[MLOOP]
-mloop_params = {"x": {"min": -5.0, "max": 5.0, "start": -2.0} }
+[MLOOP_PARAMS.x]
+global_name = "x"
+min = -5.0
+max = 5.0
+start = -2
 ```
 
   * `cost_key`: Column of the lyse dataframe to derive the cost from, specified as a `[routine_name, result_name]` pair. The present cost comes from the most recent value in this column, i.e. `cost = df[cost_key].iloc[-1]`.
   * `maximize`: Whether or not to negate the above value, since M-LOOP will minimize the cost.
-  * `mloop_params`: Dictionary of optimisation parameters, specified as (`global_name`, `dict`) pairs, where `dict` is used to create `min_boundary`, `max_boundary`, and `first_params` lists to meet [M-LOOP specifications](https://m-loop.readthedocs.io/en/latest/tutorials.html#parameter-settings).
+  * `MLOOP_PARAMS`: Dictionary of optimisation parameters controlled by MLOOP
+    * `global_name` defines the global it maps to in runmanager.
+    * `min`, `max`, `start` correspond to `min_boundary`, `max_boundary`, and `first_params` lists to meet [M-LOOP specifications](https://m-loop.readthedocs.io/en/latest/tutorials.html#parameter-settings).
+
+You may also specify a more complicated mapping between the paramaters controller by MLOOP and globals in runmanager.
+
+```toml
+[MLOOP_PARAMS.y]
+min = -5.0
+max = 5.0
+start = -2
+
+[MLOOP_PARAMS.z]
+min = -5.0
+max = 5.0
+start = -2
+
+[RUNMANAGER_GLOBALS.test_tuple]
+expr = "lambda m, n: (m, n)"
+args = ["y", "z"]
+```
+
+  * `y` and `z` are two MLOOP parameters that don't have a `global_name` defined.
+  * Instead, an dictionary entry in `RUNMANAGER_GLOBALS`, targeting global `test_tuple` in runmanager, is explicitly defined here with a customized mapping `lambda m, n: (m, n)`, which takes `y` and `z` as parameters. Every time, the tuple `(y, z)` will be passed to `test_tuple` in runmanager.
 
 3. **Load the analysis routine that computes the quantity you want to optimise into [lyse](https://github.com/labscript-suite/lyse).** This routine should update `cost_key` of the lyse dataframe by calling the `save_result` (or its variants) of a `lyse.Run`. For the above parameters, this would be `fake_result.py` containing:
 
