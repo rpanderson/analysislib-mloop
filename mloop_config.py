@@ -160,33 +160,35 @@ def get(config_paths=None):
                 )
 
     elif config_type == "toml":
-        for name, param in config["MLOOP_PARAMS"].items():
-            if ("group" in param) and (param["group"] in config["MLOOP"]["groups"]):
-                param_dict[name] = \
-                        MloopParam(
-                                name=name,
-                                min=param["min"],
-                                max=param["max"],
-                                start=param["start"]
-                                )
-
-                if "global_name" in param:
-                    global_list.append(RunmanagerGlobal(
-                                    name=param["global_name"],
-                                    expr=None,
-                                    args=[name]
+        for group in config["MLOOP_PARAMS"]:
+            if group in config["griups"]
+                for name, param in config["MLOOP_PARAMS"][group]:
+                    param_dict[name] = \
+                            MloopParam(
+                                    name=name,
+                                    min=param["min"],
+                                    max=param["max"],
+                                    start=param["start"]
                                     )
-                    )
+
+                    if "global_name" in param:
+                        global_list.append(RunmanagerGlobal(
+                                        name=param["global_name"],
+                                        expr=None,
+                                        args=[name]
+                                        )
+                        )
 
         if "RUNMANAGER_GLOBALS" in config:
-            if ("group" in param) and (param["group"] in config["MLOOP"]["groups"]): 
-                for name, param in config["RUNMANAGER_GLOBALS"].items():
-                    global_list.append(RunmanagerGlobal(
-                                    name=name,
-                                    expr=param.get('expr', None),
-                                    args=param['args']
-                                    )
-                    )
+            for group in config["MLOOP_PARAMS"]:
+                if group in config["groups"]:
+                    for name, param in config["RUNMANAGER_GLOBALS"][group]:
+                        global_list.append(RunmanagerGlobal(
+                                        name=name,
+                                        expr=param.get('expr', None),
+                                        args=param['args']
+                                        )
+                        )
 
         # check if all mloop params can be mapped to at least one global
         for ml_name in param_dict.keys():
