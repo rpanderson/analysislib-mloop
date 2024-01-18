@@ -161,7 +161,7 @@ def get(config_paths=None):
 
     elif config_type == "toml":
         for group in config["MLOOP_PARAMS"]:
-            if group in config["griups"]
+            if group in config["griups"]:
                 for name, param in config["MLOOP_PARAMS"][group]:
                     param_dict[name] = \
                             MloopParam(
