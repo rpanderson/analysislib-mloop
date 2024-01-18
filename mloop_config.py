@@ -115,6 +115,8 @@ def get(config_paths=None):
         config["MLOOP"]["controller_type"] = '"gaussian_process"'
         # Mute output from MLOOP optimiser
         config["MLOOP"]["console_log_level"] = '"NOTSET"'
+        # Which groups to actually optimize
+        config["MLOOP"]["groups"] = []
 
         # Write to file
         folder = os.path.dirname(__file__)
@@ -159,7 +161,7 @@ def get(config_paths=None):
 
     elif config_type == "toml":
         for name, param in config["MLOOP_PARAMS"].items():
-            if ("enable" in param) and param["enable"]: 
+            if ("group" in param) and (param["group"] in config["MLOOP"]["groups"]):
                 param_dict[name] = \
                         MloopParam(
                                 name=name,
@@ -177,7 +179,7 @@ def get(config_paths=None):
                     )
 
         if "RUNMANAGER_GLOBALS" in config:
-            if ("enable" in param) and param["enable"]:
+            if ("group" in param) and (param["group"] in config["MLOOP"]["groups"]): 
                 for name, param in config["RUNMANAGER_GLOBALS"].items():
                     global_list.append(RunmanagerGlobal(
                                     name=name,
