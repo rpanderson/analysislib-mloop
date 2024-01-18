@@ -5,7 +5,7 @@ mock = false
 cost_key = ["fake_result_multishot", "y"]
 maximize = true
 ignore_bad = false
-ignore_bad = true
+# ignore_bad = true
 analysislib_console_log_level = 20
 analysislib_file_log_level = 10
 
