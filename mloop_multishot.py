@@ -103,7 +103,7 @@ def verify_globals(config):
 
     # Get the parameter values for the shot we just computed the cost for
     logger.debug('Getting lyse dataframe.')
-    df = lyse.data()
+    df = lyse.data(n_sequences=1)
     shot_values = [df[g.name].iloc[-1] for g in config['runmanager_globals']]
 
     # Verify integrity by cross-checking against what was requested
@@ -139,7 +139,7 @@ def cost_analysis(cost_key=(None,), maximize=True, x=None):
 
     # Retrieve current lyse DataFrame
     logger.debug('Getting lyse dataframe.')
-    df = lyse.data()
+    df = lyse.data(n_sequences=1)
 
     # Use the most recent shot
     ix = -1
