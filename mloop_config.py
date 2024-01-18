@@ -159,30 +159,32 @@ def get(config_paths=None):
 
     elif config_type == "toml":
         for name, param in config["MLOOP_PARAMS"].items():
-            param_dict[name] = \
-                    MloopParam(
-                            name=name,
-                            min=param["min"],
-                            max=param["max"],
-                            start=param["start"]
-                            )
-
-            if "global_name" in param:
-                global_list.append(RunmanagerGlobal(
-                                name=param["global_name"],
-                                expr=None,
-                                args=[name]
+            if ("enable" in param) and param["enable"]: 
+                param_dict[name] = \
+                        MloopParam(
+                                name=name,
+                                min=param["min"],
+                                max=param["max"],
+                                start=param["start"]
                                 )
-                )
+
+                if "global_name" in param:
+                    global_list.append(RunmanagerGlobal(
+                                    name=param["global_name"],
+                                    expr=None,
+                                    args=[name]
+                                    )
+                    )
 
         if "RUNMANAGER_GLOBALS" in config:
-            for name, param in config["RUNMANAGER_GLOBALS"].items():
-                global_list.append(RunmanagerGlobal(
-                                name=name,
-                                expr=param.get('expr', None),
-                                args=param['args']
-                                )
-                )
+            if ("enable" in param) and param["enable"]:
+                for name, param in config["RUNMANAGER_GLOBALS"].items():
+                    global_list.append(RunmanagerGlobal(
+                                    name=name,
+                                    expr=param.get('expr', None),
+                                    args=param['args']
+                                    )
+                    )
 
         # check if all mloop params can be mapped to at least one global
         for ml_name in param_dict.keys():
