@@ -161,8 +161,8 @@ def get(config_paths=None):
 
     elif config_type == "toml":
         for group in config["MLOOP_PARAMS"]:
-            if group in config["groups"]:
-                for name, param in config["MLOOP_PARAMS"][group]:
+            if group in config["MLOOP"]["groups"]:
+                for name, param in config["MLOOP_PARAMS"][group].items():
                     param_dict[name] = \
                             MloopParam(
                                     name=name,
@@ -180,9 +180,9 @@ def get(config_paths=None):
                         )
 
         if "RUNMANAGER_GLOBALS" in config:
-            for group in config["MLOOP_PARAMS"]:
-                if group in config["groups"]:
-                    for name, param in config["RUNMANAGER_GLOBALS"][group]:
+            for group in config["RUNMANAGER_GLOBALS"]:
+                if group in config["MLOOP"]["groups"]:
+                    for name, param in config["RUNMANAGER_GLOBALS"][group].items():
                         global_list.append(RunmanagerGlobal(
                                         name=name,
                                         expr=param.get('expr', None),
