@@ -2,7 +2,7 @@
 mock = false
 
 [ANALYSIS]
-cost_key = ["zTOF_singleShot", "max_OD"]
+cost_key = ["fake_result_multishot", "y"]
 maximize = true
 ignore_bad = false
 # ignore_bad = true
@@ -22,33 +22,28 @@ console_log_level = 0
 groups = ["MOT"]
 
 # Automatically creates the mapping to a Runmanager global
-[MLOOP_PARAMS.MOT.test_mloop]
-global_name = "test_mloop"  # << Specify the Runmanager global it maps to
-enable = true # This is an optinal parameter that defaults to true
+[MLOOP_PARAMS.MOT.x]
+global_name = "x"  # << Specify the Runmanager global it maps to
 min = -5.0
 max = 5.0
 start = -2
 
 # The mapping automatically created above by defining global_name is equivalent to
 # [RUNMANAGER_GLOBALS.MOT.x]
-# enable = false
 # expr = "lambda m: m"
 # args = ["x"]
 
 # Create a MLOOP parameter but define its mapping to Runmanager globals later
 [MLOOP_PARAMS.TEST_FUNCTION.y]
-enable = true
 min = -5.0
 max = 5.0
 start = -2
 
 [MLOOP_PARAMS.TEST_FUNCTION.z]
-enable = true
 min = -5.0
 max = 5.0
 start = -2
 
 [RUNMANAGER_GLOBALS.TEST_FUNCTION.test_tuple]
-enable = true
 expr = "lambda m, n: (m, n)"
 args = ["y", "z"]
