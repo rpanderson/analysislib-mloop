@@ -9,13 +9,13 @@ from collections import namedtuple
 MloopParam = namedtuple("MloopParam", ["name", "min", "max", "start"])
 RunmanagerGlobal = namedtuple("RunmanagerGlobal", ["name", "expr", "args"])
 
-def is_global_active(config, group, category)
+def is_global_active(config, group, name, category):
     """
     We check to see if the requeted global has been activated or not
     """
 
     if group in config["MLOOP"]["groups"]:
-        if ("enable" not in config[category][group]) or config[category][group]:
+        if config[category][group][name].get("enable", True):
             return True
     
     return False
@@ -80,7 +80,7 @@ def get(config_paths=None):
 
     for group in config.get("MLOOP_PARAMS", {}):
         for name, param in config["MLOOP_PARAMS"][group].items():
-            if is_global_active(config, group, "MLOOP_PARAMS"):
+            if is_global_active(config, group, name, "MLOOP_PARAMS"):
                 param_dict[name] = MloopParam(
                     name=name,
                     min=param["min"],
@@ -99,7 +99,7 @@ def get(config_paths=None):
 
     for group in config.get("RUNMANAGER_GLOBALS", {}):
         for name, param in config["RUNMANAGER_GLOBALS"][group].items():
-            if is_global_active(config, group, "RUNMANAGER_GLOBALS"):
+            if is_global_active(config, group, name, "RUNMANAGER_GLOBALS"):
 
                 global_list.append(
                     RunmanagerGlobal(
@@ -109,26 +109,24 @@ def get(config_paths=None):
                     )
                 )
 
-        # check if all mloop params can be mapped to at least one global
-        for ml_name in param_dict.keys():
-            if not any([ (ml_name in g.args) for g in global_list ]):
-                raise KeyError(f"Parameter {ml_name} in MLOOP_PARAMS doesn't have a Runmanager global mapped to it.")
+    # check if all mloop params can be mapped to at least one global
+    for ml_name in param_dict.keys():
+        if not any([ (ml_name in g.args) for g in global_list ]):
+            raise KeyError(f"Parameter {ml_name} in MLOOP_PARAMS doesn't have a Runmanager global mapped to it.")
 
-        # check if all args of any global has been defined in mloop params
-        for g in global_list:
-            for a in g.args:
-                if a not in param_dict:
-                    raise KeyError(f"Argument {a} of global {g.name} doesn't exist.")
+    # check if all args of any global has been defined in mloop params
+    for g in global_list:
+        for a in g.args:
+            if a not in param_dict:
+                raise KeyError(f"Argument {a} of global {g.name} doesn't exist.")
 
-        params['mloop_params'] = param_dict
-        params['runmanager_globals'] = global_list
+    params['mloop_params'] = param_dict
+    params['runmanager_globals'] = global_list
 
-        params['num_params'] = len(params['mloop_params'].values())
-        params['min_boundary'] = [p.min for p in params['mloop_params'].values()]
-        params['max_boundary'] = [p.max for p in params['mloop_params'].values()]
-        params['first_params'] = [p.start for p in params['mloop_params'].values()]
-        
-
+    params['num_params'] = len(params['mloop_params'].values())
+    params['min_boundary'] = [p.min for p in params['mloop_params'].values()]
+    params['max_boundary'] = [p.max for p in params['mloop_params'].values()]
+    params['first_params'] = [p.start for p in params['mloop_params'].values()]
         
     return params
 
