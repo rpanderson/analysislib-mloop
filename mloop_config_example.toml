@@ -1,0 +1,178 @@
+[COMPILATION]
+mock = false
+
+[ANALYSIS]
+cost_key = ["zTOF_singleShot", "Nb"]
+maximize = true
+ignore_bad = false
+analysislib_console_log_level = 20
+analysislib_file_log_level = 10
+
+[MLOOP]
+num_training_runs = 5
+max_num_runs_without_better_params = 80
+max_num_runs = 400
+trust_region = 0.05
+cost_has_noise = true
+no_delay = true # false
+visualisations = false
+controller_type = "gaussian_process"
+console_log_level = 0
+groups = ["CMOT", "MOL", "MTRAP"]
+
+ ######  ##     ##  #######  ########
+##    ## ###   ### ##     ##    ##
+##       #### #### ##     ##    ##
+##       ## ### ## ##     ##    ##
+##       ##     ## ##     ##    ##
+##    ## ##     ## ##     ##    ##
+ ######  ##     ##  #######     ##
+
+[MLOOP_PARAMS.CMOT.CMOTCaptureWidth]
+global_name = "CMOTCaptureWidth"  # runmanager global it maps to
+enable = true # This is an optional parameter that defaults to true
+min = 0.01 
+max = 0.5
+start = 0.05
+
+[MLOOP_PARAMS.CMOT.CMOTCurrent]
+global_name = "CMOTCurrent"  
+enable = true 
+min = 5
+max = 40
+start = 20
+
+[MLOOP_PARAMS.CMOT.CMOTFreq]
+global_name = "CMOTFreq"  
+enable = true 
+min = -1
+max = 1.5
+start = 0.5
+
+[MLOOP_PARAMS.CMOT.RepumpCMOT]
+global_name = "RepumpCMOT"  
+enable = true 
+min = 0.0
+max = 1.2
+start = 0.055
+
+##     ##  #######  ##          ###     ######   ######  ########  ######
+###   ### ##     ## ##         ## ##   ##    ## ##    ## ##       ##    ##
+#### #### ##     ## ##        ##   ##  ##       ##       ##       ##
+## ### ## ##     ## ##       ##     ##  ######   ######  ######    ######
+##     ## ##     ## ##       #########       ##       ## ##             ##
+##     ## ##     ## ##       ##     ## ##    ## ##    ## ##       ##    ##
+##     ##  #######  ######## ##     ##  ######   ######  ########  ######
+
+[MLOOP_PARAMS.MOL.EndFreqMol]
+global_name = "EndFreqMol"  
+enable = false 
+min = 0.0
+max = 4
+start = 3.1
+
+[MLOOP_PARAMS.MOL.MolXBias]
+global_name = "MolXBias"  
+enable = false 
+min = -1.0
+max = 1.5
+start = 0.44
+
+[MLOOP_PARAMS.MOL.MolYBias]
+global_name = "MolYBias"  
+enable = false 
+min = -1.0
+max = 1.5
+start = 0.42
+
+[MLOOP_PARAMS.MOL.MolZBias]
+global_name = "MolZBias"  
+enable = false 
+min = -1.0
+max = 1.0
+start = -0.04
+
+[MLOOP_PARAMS.MOL.RepumpMol]
+global_name = "RepumpMol"  
+enable = true 
+min = 0.0
+max = 0.5
+start = 0.04
+
+[MLOOP_PARAMS.MOL.StartFreqMol]
+global_name = "StartFreqMol"  
+enable = true 
+min = 0.0
+max = 4
+start = 0.45
+
+[MLOOP_PARAMS.MOL.TauMol]
+global_name = "TauMol"  
+enable = true 
+min = 0.001
+max = 0.1
+start = 0.022
+
+[MLOOP_PARAMS.MOL.TimeMol]
+global_name = "TimeMol"  
+enable = false 
+min = 0.005
+max = 0.04
+start = 0.011
+
+##     ## ######## ########     ###    ########
+###   ###    ##    ##     ##   ## ##   ##     ##
+#### ####    ##    ##     ##  ##   ##  ##     ##
+## ### ##    ##    ########  ##     ## ########
+##     ##    ##    ##   ##   ######### ##
+##     ##    ##    ##    ##  ##     ## ##
+##     ##    ##    ##     ## ##     ## ##
+
+[MLOOP_PARAMS.MTRAP.CapxShim]
+global_name = "CapxShim"  
+enable = true 
+min = -2
+max = 2
+start = 0.067
+
+[MLOOP_PARAMS.MTRAP.CapyShim]
+global_name = "CapyShim"  
+enable = true 
+min = -4
+max = 4
+start = -2
+
+[MLOOP_PARAMS.MTRAP.CapzShim]
+global_name = "CapzShim"  
+enable = true 
+min = -3
+max = 3
+start = 0.41
+
+[MLOOP_PARAMS.MTRAP.IM]
+global_name = "IM"  
+enable = true 
+min = 60
+max = 100
+start = 90
+
+[MLOOP_PARAMS.MTRAP.MOTCaptureCurrent]
+global_name = "MOTCaptureCurrent"  
+enable = true 
+min = 20
+max = 100
+start = 34
+
+[MLOOP_PARAMS.MTRAP.MTrapCaptureWidth]
+global_name = "MTrapCaptureWidth"  
+enable = true 
+min = 0.001
+max = 0.1
+start = 0.01
+
+[MLOOP_PARAMS.MTRAP.TrapTime]
+global_name = "TrapTime"  
+enable = true 
+min = 0.001
+max = 0.2
+start = 0.03

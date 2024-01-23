@@ -1,17 +1,24 @@
 import os
 import json
 import configparser
-import tomli
-import logging
 from collections import namedtuple
+
+import logging
+logger = logging.getLogger('analysislib_mloop')
+
+try:
+    import tomllib
+except:
+    logger.debug('tomllib not found.  Falling back to tomli')
+    import tomli as tomllib
 
 
 MloopParam = namedtuple("MloopParam", ["name", "min", "max", "start"])
 RunmanagerGlobal = namedtuple("RunmanagerGlobal", ["name", "expr", "args"])
 
-def is_global_active(config, group, name, category):
+def is_global_enabled(config, group, name, category):
     """
-    We check to see if the requeted global has been activated or not
+    We check to see if the required global has been activated or not
     """
 
     if group in config["MLOOP"]["groups"]:
@@ -38,32 +45,23 @@ def prepare_globals(global_list, params_val_dict):
     return globals_to_set
 
 
-def get(config_paths=None):
-    """Creates config file from specified file, or
-    creates one locally with default values.
+def get(config_path=None):
+    """
+    Setup the mloop interface using the file specified by config_path
     """
 
     # Default to local directory and default name
-    if not config_paths:
-        config_paths = []
+    if not config_path:
         folder = os.path.dirname(__file__)
-        config_paths.append(os.path.join(folder, "mloop_config.toml"))
-        config_paths.append(os.path.join(folder, "mloop_config.ini"))
+        config_path = os.path.join(folder, "mloop_config.ini")
 
-    config_path = ""
-    for path in config_paths:
-        if os.path.isfile(path):
-            print(path)
-            config_path = path
-            break
+    # TODO: Check if file exists and copy a default into the specified location if it does not
+    # Also throw an exception since the default is unlikely to work for the user.
 
-    config = None
-    if config_path:
-        with open(config_path, "rb") as f:
-            config = tomli.load(f)
-    else:
-        raise RuntimeError("Unknown configuration file type. Supports only .toml.")
+    # if os.path.isfile(config_path): ... 
 
+    with open(config_path, "rb") as f:
+        config = tomllib.load(f)
 
     to_flatten = ["COMPILATION", "ANALYSIS", "MLOOP"]
     # iterate over configuration object and store pairs in parameter dictionary
@@ -80,7 +78,7 @@ def get(config_paths=None):
 
     for group in config.get("MLOOP_PARAMS", {}):
         for name, param in config["MLOOP_PARAMS"][group].items():
-            if is_global_active(config, group, name, "MLOOP_PARAMS"):
+            if is_global_enabled(config, group, name, "MLOOP_PARAMS"):
                 param_dict[name] = MloopParam(
                     name=name,
                     min=param["min"],
@@ -99,7 +97,7 @@ def get(config_paths=None):
 
     for group in config.get("RUNMANAGER_GLOBALS", {}):
         for name, param in config["RUNMANAGER_GLOBALS"][group].items():
-            if is_global_active(config, group, name, "RUNMANAGER_GLOBALS"):
+            if is_global_enabled(config, group, name, "RUNMANAGER_GLOBALS"):
 
                 global_list.append(
                     RunmanagerGlobal(

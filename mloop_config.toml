@@ -2,160 +2,47 @@
 mock = false
 
 [ANALYSIS]
-cost_key = ["zTOF_singleShot", "Nb"]
+cost_key = ["fake_result", "y"]
 maximize = true
-ignore_bad = false
+ignore_bad = false # true
 analysislib_console_log_level = 20
 analysislib_file_log_level = 10
+groups = ["MOT"]
 
 [MLOOP]
 num_training_runs = 5
-max_num_runs_without_better_params = 80
-max_num_runs = 400
+max_num_runs_without_better_params = 10
+max_num_runs = 30
 trust_region = 0.05
 cost_has_noise = true
-no_delay = true # false
+no_delay = false
 visualisations = false
 controller_type = "gaussian_process"
 console_log_level = 0
-groups = ["CMOT", "MOL", "MTRAP"]
 
-# CMOT Parameters
-
-[MLOOP_PARAMS.CMOT.CMOTCaptureWidth]
-global_name = "CMOTCaptureWidth"  # Runmanager global it maps to
-enable = true # This is an optinal parameter that defaults to true
-min = 0.01
-max = 0.5
-start = 0.05
-
-[MLOOP_PARAMS.CMOT.CMOTCurrent]
-global_name = "CMOTCurrent"  # Runmanager global it maps to
-enable = true # This is an optinal parameter that defaults to true
-min = 5
-max = 40
-start = 20
-
-[MLOOP_PARAMS.CMOT.CMOTFreq]
-global_name = "CMOTFreq"  # Runmanager global it maps to
-enable = true # This is an optinal parameter that defaults to true
-min = -1
-max = 1.5
-start = 0.5
-
-[MLOOP_PARAMS.CMOT.RepumpCMOT]
-global_name = "RepumpCMOT"  # Runmanager global it maps to
-enable = true # This is an optinal parameter that defaults to true
-min = 0.0
-max = 1.2
-start = 0.055
-
-# Molassas Parameters
-
-[MLOOP_PARAMS.MOL.EndFreqMol]
-global_name = "EndFreqMol"  # Runmanager global it maps to
-enable = false # This is an optinal parameter that defaults to true
-min = 0.0
-max = 4
-start = 3.1
-
-[MLOOP_PARAMS.MOL.MolXBias]
-global_name = "MolXBias"  # Runmanager global it maps to
-enable = false # This is an optinal parameter that defaults to true
-min = -1.0
-max = 1.5
-start = 0.44
-
-[MLOOP_PARAMS.MOL.MolYBias]
-global_name = "MolYBias"  # Runmanager global it maps to
-enable = false # This is an optinal parameter that defaults to true
-min = -1.0
-max = 1.5
-start = 0.42
-
-[MLOOP_PARAMS.MOL.MolZBias]
-global_name = "MolZBias"  # Runmanager global it maps to
-enable = false # This is an optinal parameter that defaults to true
-min = -1.0
-max = 1.0
-start = -0.04
-
-[MLOOP_PARAMS.MOL.RepumpMol]
-global_name = "RepumpMol"  # Runmanager global it maps to
-enable = true # This is an optinal parameter that defaults to true
-min = 0.0
-max = 0.5
-start = 0.04
-
-[MLOOP_PARAMS.MOL.StartFreqMol]
-global_name = "StartFreqMol"  # Runmanager global it maps to
-enable = true # This is an optinal parameter that defaults to true
-min = 0.0
-max = 4
-start = 0.45
-
-[MLOOP_PARAMS.MOL.TauMol]
-global_name = "TauMol"  # Runmanager global it maps to
-enable = true # This is an optinal parameter that defaults to true
-min = 0.001
-max = 0.1
-start = 0.022
-
-[MLOOP_PARAMS.MOL.TimeMol]
-global_name = "TimeMol"  # Runmanager global it maps to
-enable = false # This is an optinal parameter that defaults to true
-min = 0.005
-max = 0.04
-start = 0.011
-
-[MLOOP_PARAMS.MTRAP.CapxShim]
-global_name = "CapxShim"  # Runmanager global it maps to
-enable = true # This is an optinal parameter that defaults to true
-min = -2
-max = 2
-start = 0.067
-
-[MLOOP_PARAMS.MTRAP.CapyShim]
-global_name = "CapyShim"  # Runmanager global it maps to
-enable = true # This is an optinal parameter that defaults to true
-min = -4
-max = 4
+# Automatically creates the mapping to a runmanager global
+[MLOOP_PARAMS.MOT.x] # this is part of the MOT group 
+global_name = "x"  # << Specify the runmanager global it maps to
+min = -5.0
+max = 5.0
 start = -2
 
-[MLOOP_PARAMS.MTRAP.CapzShim]
-global_name = "CapzShim"  # Runmanager global it maps to
-enable = true # This is an optinal parameter that defaults to true
-min = -3
-max = 3
-start = 0.41
+# The mapping automatically created above by defining global_name is equivalent to
+# [RUNMANAGER_GLOBALS.MOT.x] # this is part of the MOT group 
+# expr = "lambda m: m"
+# args = ["x"]
 
-[MLOOP_PARAMS.MTRAP.IM]
-global_name = "IM"  # Runmanager global it maps to
-enable = true # This is an optinal parameter that defaults to true
-min = 60
-max = 100
-start = 90
+# Create a MLOOP parameter but define its mapping to runmanager globals later
+[MLOOP_PARAMS.TEST_FUNCTION.y] # this is part of the TEST_FUNCTION group 
+min = -5.0
+max = 5.0
+start = -2
 
-[MLOOP_PARAMS.MTRAP.MOTCaptureCurrent]
-global_name = "MOTCaptureCurrent"  # Runmanager global it maps to
-enable = true # This is an optinal parameter that defaults to true
-min = 20
-max = 100
-start = 34
+[MLOOP_PARAMS.TEST_FUNCTION.z]  # this is part of the TEST_FUNCTION group 
+min = -5.0
+max = 5.0
+start = -2
 
-[MLOOP_PARAMS.MTRAP.MTrapCaptureWidth]
-global_name = "MTrapCaptureWidth"  # Runmanager global it maps to
-enable = true # This is an optinal parameter that defaults to true
-min = 0.001
-max = 0.1
-start = 0.01
-
-[MLOOP_PARAMS.MTRAP.TrapTime]
-global_name = "TrapTime"  # Runmanager global it maps to
-enable = true # This is an optinal parameter that defaults to true
-min = 0.001
-max = 0.2
-start = 0.03
-
-
-
+[RUNMANAGER_GLOBALS.TEST_FUNCTION.test_tuple]  # this is part of the TEST_FUNCTION group 
+expr = "lambda x, y: (x, y)"
+args = ["y", "z"]
