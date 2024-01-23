@@ -21,7 +21,7 @@ def is_global_enabled(config, group, name, category):
     We check to see if the required global has been activated or not
     """
 
-    if group in config["MLOOP"]["groups"]:
+    if group in config["ANALYSIS"]["groups"]:
         if config[category][group][name].get("enable", True):
             return True
     
