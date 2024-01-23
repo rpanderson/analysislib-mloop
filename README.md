@@ -2,11 +2,11 @@
 
 # the _labscript suite_ » analysislib-mloop
 
-### Machine-learning online optimization of 𝘭𝘢𝘣𝘴𝘤𝘳𝘪𝘱𝘵 𝘴𝘶𝘪𝘵𝘦 controlled experiments
+### Machine-learning online optimization of [_labscript suite_](https://docs.labscriptsuite.org/en/latest/installation) controlled experiments
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 [![GitHub](https://img.shields.io/github/license/rpanderson/analysislib-mloop)](https://github.com/rpanderson/analysislib-mloop/raw/master/LICENSE)
-[![python: 3.6 | 3.7 | 3.8](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](https://python.org)
+[![python: 3.6+ ](https://img.shields.io/badge/python-3.6+-blue)](https://python.org)
 
 **analysislib-mloop** implements machine-learning online optimization of [_labscript suite_](http://labscriptsuite.org) controlled experiments using [M-LOOP](https://m-loop.readthedocs.io).
 
@@ -18,11 +18,13 @@
 * [labscript_utils](https://github.com/labscript-suite/labscript_utils) 2.12.4
 * [zprocess](https://pypi.org/project/zprocess) 2.13.2
 * [M-LOOP](https://m-loop.readthedocs.io/en/latest/install.html) 2.2.0+
+* For python versions older than 3.11 `tomllib` is not included and `tomli` must be installed instead.
+  * [tomli](https://pypi.org/project/tomli/) 2.0.1
 
 
 ## Installation
 
-The following assumes you have a working installation of the [_labscript suite_](https://docs.labscriptsuite.org/en/latest/installation) and [M-LOOP](https://m-loop.readthedocs.io/en/latest/install.html). Please see the installation documentation of these projects if you don't.  For python versions older than 3.11 `tomllib` is not included and [_tomli_](https://pypi.org/project/tomli/) must be installed instead.
+The following assumes you have a working installation of the [_labscript suite_](https://docs.labscriptsuite.org/en/latest/installation) and [M-LOOP](https://m-loop.readthedocs.io/en/latest/install.html). Please see the installation documentation of these projects if you don't. 
 
 Clone this repository in your _labscript suite_ analysislib directory. By default, this is `~/labscript-suite/userlib/analysislib` (`~` is `%USERPROFILE%` on Windows).
 
