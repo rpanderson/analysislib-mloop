@@ -53,7 +53,7 @@ def get(config_path=None):
     # Default to local directory and default name
     if not config_path:
         folder = os.path.dirname(__file__)
-        config_path = os.path.join(folder, "mloop_config.ini")
+        config_path = os.path.join(folder, "mloop_config.toml")
 
     # TODO: Check if file exists and copy a default into the specified location if it does not
     # Also throw an exception since the default is unlikely to work for the user.
