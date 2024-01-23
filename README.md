@@ -61,8 +61,8 @@ start = -2
 
   * `cost_key`: Column of the lyse dataframe to derive the cost from, specified as a `[routine_name, result_name]` pair. The present cost comes from the most recent value in this column, i.e. `cost = df[cost_key].iloc[-1]`.
   * `maximize`: Whether or not to negate the above value, since M-LOOP will minimize the cost.
-  * `groups`: Which group(s) of parameters are active
-  * `MLOOP_PARAMS`: Dictionary of optimization parameters controlled by MLOOP, specified as a list of groups such as `["MOT", "CMOT"]`. This is to simplify the optimization of different groups of parameters.
+  * `groups`: Which group(s) of parameters are active, specified as a list of groups such as `["MOT", "CMOT"]`. This is to simplify the optimization of different groups of parameters.
+  * `MLOOP_PARAMS`: Dictionary of optimization parameters controlled by MLOOP.
     * `global_name` defines the global it maps to in runmanager.
     * `enable` allows parameters to be enabled or disabled on a case-by-case basis.  This may be omitted and defaults to `true`.
     * `min`, `max`, `start` correspond to `min_boundary`, `max_boundary`, and `first_params` lists to meet [M-LOOP specifications](https://m-loop.readthedocs.io/en/latest/tutorials.html#parameter-settings).
