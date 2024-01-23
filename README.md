@@ -81,12 +81,12 @@ max = 5.0
 start = -2
 
 [RUNMANAGER_GLOBALS.CMOT.test_tuple]
-expr = "lambda x, y: (x, y)"
+expr = "lambda y, z: (y, z)"
 args = ["y", "z"]
 ```
   * parameters may be shared between different groups, but the group must be enabled and the parameter must be enabled.
   * `y` and `z` are two MLOOP parameters that don't have a `global_name` defined.
-  * Instead, a dictionary entry in `RUNMANAGER_GLOBALS`, targeting global `test_tuple` in runmanager, is explicitly defined here with a customized mapping `lambda m, n: (m, n)`, which takes `y` and `z` as parameters. Every time, the tuple `(y, z)` will be passed to `test_tuple` in runmanager.
+  * Instead, a dictionary entry in `RUNMANAGER_GLOBALS`, targeting global `test_tuple` in runmanager, is explicitly defined here with a customized mapping `lambda y, z: (y, z)`, which takes `y` and `z` as parameters. Every time, the tuple `(y, z)` will be passed to `test_tuple` in runmanager.
 
 This might be useful if you have organized your runmanager variables into more complicated data structures such as tuples, dictionaries, or whatever.
 
