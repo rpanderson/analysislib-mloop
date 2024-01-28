@@ -107,7 +107,7 @@ run.save_result('y', your_result)
 5. **Begin automated optimization** by doing one of the following:
     * Press the 'Run multishot analysis' button in lyse.
         + This requires the globals specified in `mloop_params` are active in runmanager; unless you
-        + Set `mock = true` in `mloop_config.ini`, which bypasses shot compilation and submission, and generates a fake cost based on the current value of the first optimization parameter. Each press of 'Run multishot analysis' will elicit another M-LOOP iteration. This is useful for testing your M-LOOP installation and the threading/multiprocessing used in this codebase, as it only requires that lyse be running (and permits you to skip creating the template file and performing steps (1) and (3) above).
+        + Set `mock = true` in `mloop_config.toml`, which bypasses shot compilation and submission, and generates a fake cost based on the current value of the first optimization parameter. Each press of 'Run multishot analysis' will elicit another M-LOOP iteration. This is useful for testing your M-LOOP installation and the threading/multiprocessing used in this codebase, as it only requires that lyse be running (and permits you to skip creating the template file and performing steps (1) and (3) above).
     * Press the 'Engage' button in runmanager.
     Either of these will begin an M-LOOP optimization, with a new sequence of shots being compiled and submitted to [blacs](https://github.com/labscript-suite/blacs) each time a cost value is computed.
 
@@ -154,7 +154,7 @@ run = lyse.Run(h5_path=df.filepath.iloc[-1])
 run.save_result(name='y', value=your_result if your_condition else np.nan)
 ```
 
-... and set `ignore_bad = true` in the analysis section of `mloop_config.ini`. Shots with `your_condition = False` will be not elicit the cost to be updated, thus postponing the next iteration of optimization. An example of such a multi-shot routine can be found in fake_result_multishot.py.
+... and set `ignore_bad = true` in the analysis section of `mloop_config.toml`. Shots with `your_condition = False` will be not elicit the cost to be updated, thus postponing the next iteration of optimization. An example of such a multi-shot routine can be found in fake_result_multishot.py.
 
 
 ### Analyzing optimization results
