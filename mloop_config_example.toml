@@ -7,6 +7,7 @@ maximize = true
 ignore_bad = false
 analysislib_console_log_level = 20
 analysislib_file_log_level = 10
+groups = ["CMOT", "MOL", "MTRAP"]
 
 [MLOOP]
 num_training_runs = 5
@@ -18,7 +19,6 @@ no_delay = true # false
 visualisations = false
 controller_type = "gaussian_process"
 console_log_level = 0
-groups = ["CMOT", "MOL", "MTRAP"]
 
  ######  ##     ##  #######  ########
 ##    ## ###   ### ##     ##    ##
