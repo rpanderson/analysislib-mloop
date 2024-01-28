@@ -1,6 +1,4 @@
 import os
-import json
-import configparser
 from collections import namedtuple
 
 import logging
