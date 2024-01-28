@@ -94,12 +94,8 @@ def verify_globals(config):
     # Retrieve the parameter values requested by M-LOOP on this iteration
     logger.debug('Getting requested globals values from lyse.routine_storage.')
     requested_dict = lyse.routine_storage.params
-    print('requested_dict', requested_dict)
 
     requested_values = [requested_dict[g.name] for g in config['runmanager_globals']]
-
-    print('requested_values', requested_values)
-    print('current_values', current_values)
 
     # Get the parameter values for the shot we just computed the cost for
     logger.debug('Getting lyse dataframe.')
