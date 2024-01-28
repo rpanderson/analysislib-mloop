@@ -43,11 +43,15 @@ class LoopInterface(Interface):
         # Store current parameters to later verify reported cost corresponds to these
         # or so mloop_multishot.py can fake a cost if mock = True
         logger.debug('Storing requested parameters in lyse.routine_storage.')
-        lyse.routine_storage.params = params_dict['params']
+        globals_dict = mloop_config.prepare_globals(
+                self.config['runmanager_globals'],
+                dict(zip(self.config['mloop_params'].keys(), params_dict['params']))
+        )
+
+        lyse.routine_storage.params = globals_dict
 
         if not self.config['mock']:
             logger.info('Requesting next shot from experiment interface...')
-            globals_dict = dict(zip(self.config['mloop_params'], params_dict['params']))
             logger.debug('Setting optimization parameter values.')
             set_globals(globals_dict)
             logger.debug('Setting mloop_iteration...')
@@ -82,7 +86,10 @@ def main():
 
     # Set the optimisation globals to their best results
     logger.info('Setting best parameters in runmanager.')
-    globals_dict = dict(zip(interface.config['mloop_params'], controller.best_params))
+    globals_dict = mloop_config.prepare_globals(
+            interface.config['runmanager_globals'],
+            dict(zip(interface.config['mloop_params'].keys(), controller.best_params))
+    )
     set_globals(globals_dict)
 
     # Return the results in a dictionary

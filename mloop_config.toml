@@ -1,0 +1,48 @@
+[COMPILATION]
+mock = false
+
+[ANALYSIS]
+cost_key = ["fake_result", "y"]
+maximize = true
+ignore_bad = false # true
+analysislib_console_log_level = 20
+analysislib_file_log_level = 10
+groups = ["MOT"]
+
+[MLOOP]
+num_training_runs = 5
+max_num_runs_without_better_params = 10
+max_num_runs = 30
+trust_region = 0.05
+cost_has_noise = true
+no_delay = false
+visualisations = false
+controller_type = "gaussian_process"
+console_log_level = 0
+
+# Automatically creates the mapping to a runmanager global
+[MLOOP_PARAMS.MOT.x] # this is part of the MOT group 
+global_name = "x"  # << Specify the runmanager global it maps to
+min = -5.0
+max = 5.0
+start = -2
+
+# The mapping automatically created above by defining global_name is equivalent to
+# [RUNMANAGER_GLOBALS.MOT.x] # this is part of the MOT group 
+# expr = "lambda m: m"
+# args = ["x"]
+
+# Create a MLOOP parameter but define its mapping to runmanager globals later
+[MLOOP_PARAMS.TEST_FUNCTION.y] # this is part of the TEST_FUNCTION group 
+min = -5.0
+max = 5.0
+start = -2
+
+[MLOOP_PARAMS.TEST_FUNCTION.z]  # this is part of the TEST_FUNCTION group 
+min = -5.0
+max = 5.0
+start = -2
+
+[RUNMANAGER_GLOBALS.TEST_FUNCTION.test_tuple]  # this is part of the TEST_FUNCTION group 
+expr = "lambda x, y: (x, y)"
+args = ["y", "z"]
